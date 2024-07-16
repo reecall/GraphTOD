@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 large_embedder = get_embedding(ModelName.EMBEDDING_LARGE)
-chroma_client = chromadb.PersistentClient()
+chroma_client = chromadb.PersistentClient(path="../chroma")
 
 # read data/corpus_recipe.json as a dataframe
-df = pd.read_json("data/corpus_recipe.jsonl", lines=True)
+df = pd.read_json("corpus_recipe.jsonl", lines=True)
 recipe_titles = df["title"].to_list()
 
 # create a new collection named 'recipe'
