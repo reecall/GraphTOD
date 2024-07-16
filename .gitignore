@@ -1,0 +1,5 @@
+**/__pycache__/*
+chroma/*
+.env
+*.json
+.DS_Store
