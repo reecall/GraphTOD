@@ -70,18 +70,15 @@ class StateMachine:
             next_sentence = (
                 "You're a agent specialized in state transition graph. "
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
-                "You should return the next sentence to say to the user, knowing that you didn't understand the previous input."
+                "You should return the next sentence to say to the user, knowing that you didn't understand the previous user input, and that you can't handle such asking."
                 "The sentence should be short and look like oral language."
-                "Insert elements in your context knowledge for your answer when you think it's relevant. "
-                "Here is what you know in your context :\n"
-                f"{self.knowledge}"
                 f"Your sentence must correspond to the state '{self.state}'\n"
                 "Here is the information about the history of the conversation:\n"
                 f"{self.history_to_string()}\n"
                 "You need to inspire you from the state name to generate the next sentence. "
                 "Do not forget to be polite and helpful."
             )
-        if transition == "stop":
+        elif transition == "stop":
             next_sentence = (
                 "You're a agent specialized in state transition graph. "
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
