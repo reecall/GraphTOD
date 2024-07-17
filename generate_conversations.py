@@ -1,35 +1,69 @@
 import argparse
 import json
-from datetime import datetime
+import random as rd
 
+from datetime import datetime
 from tqdm import tqdm
 from reellm import get_llm, ModelName
-from objects.recipe_machine import RecipeMachine
+from objects.recipe_machine import RecipeMachine, StateMachine
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 choosen_recipes = []
 
 
-def generate_conv(model, DEBUG=False):
+def get_prompt(rd_walk, machine: StateMachine, step):
+    global choosen_recipes, DEBUG
+    next_transition = rd_walk[step][1] if step < len(rd_walk) else "stop"
+    detailed_intent = (
+        get_llm(ModelName.GPT_3_5_TURBO)
+        .invoke(
+            [
+                ("system", "You are an agent expert in state-transition graphs"),
+                (
+                    "user",
+                    f"Explain in few words the user intent that hides behind this transition name : {next_transition}",
+                ),
+            ],
+        )
+        .content
+    )
+    if DEBUG:
+        print(f"    Next wanted transition is {next_transition}")
+        print(f"    Detailed intent: {detailed_intent}")
+    return [
+        (
+            "system",
+            (
+                "Your goal is to generate the next user sentence of a dialog between a human and a cooking agent, based on the intent of the user. "
+                "To generate the next user input, you must follow the conversation flow and what the agent is asking you to do. "
+                "For context, here is the history of the conversation, where you are the user:\n"
+                f"{machine.history_to_string()}\n"
+                "Your generation need to be short, concise, look like a line of dialog, as someone speeking to a home assistant. "
+                "Your generation must look like a human transcription, and not like a machine generated text. "
+                "If the agent ask you to choose among multiple choices, you should choose one of them, and tell the agent your choice.\n"
+                f"You should be creative in your answer to the agent, and be creative about the recipe you want to cook (choose simple recipes). Don't choose a recipe mentioned in: {choosen_recipes}.\n"
+                if step == 0
+                else ""
+                "Return just the next sentence to say to the agent, and nothing else."
+            ),
+        ),
+        (
+            "user",
+            f'Here is the intent of the user : {detailed_intent}.\n Based on this, what should the user answer to "{machine.history[-1][1]}"?',
+        ),
+    ]
+
+
+def generate_conv(model, seed: int):
+    global choosen_recipes, DEBUG
     history = []
     sm = RecipeMachine(DEBUG=DEBUG)
-    system = (
-        "system",
-        (
-            "Act like a human on who's speaking to a cooking agent. "
-            "Your goal is to cook a recipe with the help of the agent. "
-            "Follow the agent's instructions, or propositions, and if you don't know what to say, you can ask for help."
-            "You should be creative in your answer to the agent, and be creative about the recipe you want to cook (choose simple recipes). "
-            "If the agent ask you to choose among multiple choices, you should choose one of them, and tell the agent your choice.\n"
-            f" Don't choose a recipe mentioned in: {choosen_recipes}.\n"
-            "Your answer need to be short and concise, look like oral language, as someone speeking to siri or google home. "
-            "Your generation must look like a human transcription, and not like a machine generated text. "
-            "Feel free to ask a question about the recipe at any time, if you need informations to make the recipe (cooking details, ingredient quantity, etc...). "
-            "The answer must be formatted as an instruction or a question to the agent, and nothing else. "
-            "Follow the conversation flow and try to reach the end of the conversation. "
-        ),
-    )
+    rd_walk = RecipeMachine.get_random_walk(seed=seed)
+    if DEBUG:
+        print("Random walk:")
+        print(rd_walk)
+    step = 0
     while True:
         if DEBUG:
             print(f"Agent: {sm.history[-1][1]}")
@@ -38,21 +72,25 @@ def generate_conv(model, DEBUG=False):
         )
         if DEBUG:
             print(f"Current state: {sm.state}")
-        history_copy = sm.history.copy()
-        # swith roles (assistant -> user and user -> assistant)
-        history_copy = [
-            ("assistant" if role == "user" else "user", text)
-            for role, text in sm.history
-        ]
-        user_input = model.invoke([system] + history_copy, temperature=0.8).content
+
+        # get system prompt
+        prompt = get_prompt(rd_walk=rd_walk, machine=sm, step=step)
+
+        user_input = model.invoke(
+            prompt,
+            temperature=0.3,
+        ).content
+
         if len(history) == 1:
-            choosen_recipes.append(user_input)
+            chose_recipe = user_input
+
         if DEBUG:
             print(f"You: {user_input}")
         output = sm.get_response(user_input)
         history.append(
             {"role": "user", "text": user_input, "transition": output["transition"]}
         )
+        step += 1
         if sm.state == "stop":
             if DEBUG:
                 print(f"Agent: {sm.history[-1][1]}")
@@ -60,29 +98,33 @@ def generate_conv(model, DEBUG=False):
                 {"role": "assistant", "text": sm.history[-1][1], "state": sm.state}
             )
             break
-    return history
+    choosen_recipes.append(chose_recipe)
+    return history, rd_walk
 
 
-def main(loop: int, DEBUG: bool = False):
+def main(loop: int):
+    global DEBUG
     model = get_llm(ModelName.GPT_4_O)
     for _ in tqdm(range(loop), desc="Generating conversations ...", total=loop):
+        seed = rd.randint(0, 999999999999)  # random seed
         try:
-            conv = generate_conv(model, DEBUG=DEBUG)
+            conv, rd_walk = generate_conv(model, seed)
             # save conversation in a file
             with open("simulated_conversation.jsonl", "a") as f:
                 f.write(
                     json.dumps(
                         {
                             "conversation": conv,
+                            "random_walk": rd_walk,
+                            "seed": seed,
                             "time": datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
                         },
                         ensure_ascii=False,
                     )
                     + "\n"
                 )
-        except Exception as e:
-            print(e)
-            continue
+        except ValueError as e:
+            print(f"ValueError: {e}")
 
 
 if __name__ == "__main__":
@@ -90,4 +132,6 @@ if __name__ == "__main__":
     args.add_argument("--debug", action="store_true")
     args.add_argument("-n", "--num", type=int, default=1)
     args = args.parse_args()
-    main(loop=args.num, DEBUG=args.debug)
+
+    DEBUG = args.debug
+    main(loop=args.num)

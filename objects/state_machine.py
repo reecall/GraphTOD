@@ -1,4 +1,6 @@
 import json
+import random as rd
+
 from reellm import get_llm, get_embedding, ModelName
 
 
@@ -14,6 +16,7 @@ class StateMachine:
         self.state = initial_state
         self.transitions_graph = transitions_graph
         self.history = [("assistant", initial_sentence)]
+        self.path = []
         self.function_call = function_call
         self.knowledge = {}
         self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
@@ -121,15 +124,18 @@ class StateMachine:
         self.history.append(("assistant", sentence_to_say))
         return {"transition": transition, "sentence": sentence_to_say}
 
-    def transition(self, action, input_text=None):
+    def transition(self, action, input_text=None, enable_function_call=True):
+        self.path.append((self.state, action))
         if action == "stop":
             self.state = "stop"
             return
         if action == "none":
             return
         if action in self.transitions_graph[self.state]:
-            if action in self.function_call:
-                self.knowledge.update(self.function_call[action](input_text))
+            if action in self.function_call and enable_function_call:
+                f_result = self.function_call[action](input_text)
+                if f_result:
+                    self.knowledge.update(f_result)
             self.state = self.transitions_graph[self.state][action]
         else:
             raise ValueError(
@@ -138,3 +144,17 @@ class StateMachine:
 
     def get_state(self):
         return self.state
+
+    @classmethod
+    def get_random_walk(cls, seed=None):
+        """
+        Get a random walk from the state-transition graph, formatted as a list of tuples (state, action).
+        """
+        sm = cls()
+        walk = []
+        rd.seed(seed)
+        while sm.state != "stop":
+            action = rd.choice(list(sm.transitions_graph[sm.state].keys()))
+            walk.append((sm.state, action))
+            sm.transition(action, enable_function_call=False)
+        return walk
