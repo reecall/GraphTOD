@@ -1,4 +1,4 @@
-from objects.recipe_machine import RecipeMachine
+from state_machines.recipe_machine import RecipeMachine
 from dotenv import load_dotenv
 
 load_dotenv(override=True)

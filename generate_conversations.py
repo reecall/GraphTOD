@@ -5,7 +5,7 @@ import random as rd
 from datetime import datetime
 from tqdm import tqdm
 from reellm import get_llm, ModelName
-from objects.recipe_machine import RecipeMachine, StateMachine
+from state_machines.recipe_machine import RecipeMachine, StateMachine
 from dotenv import load_dotenv
 
 load_dotenv(override=True)

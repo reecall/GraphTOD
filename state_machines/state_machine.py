@@ -1,5 +1,8 @@
 import json
+import re
+import pandas as pd
 import random as rd
+import requests
 
 from reellm import get_llm, get_embedding, ModelName
 
@@ -7,11 +10,11 @@ from reellm import get_llm, get_embedding, ModelName
 class StateMachine:
     def __init__(
         self,
-        transitions_graph,
-        initial_state,
-        function_call,
-        initial_sentence="Hello ! What can I do for you ?",
-        DEBUG=False,
+        transitions_graph: dict,
+        initial_state: str,
+        function_call: dict,
+        initial_sentence: str = "Hello ! What can I do for you ?",
+        DEBUG: bool = False,
     ):
         self.state = initial_state
         self.transitions_graph = transitions_graph
@@ -35,7 +38,7 @@ class StateMachine:
     def history_to_string(self):
         return "\n".join([f"{role}: {sentence}" for role, sentence in self.history])
 
-    def get_response(self, input_text):
+    def get_response(self, input_text: str):
         # understand what's the transition ; then apply the transition ; then return the response
         transition_prompt = (
             "You're a agent specialized in state transition graph. "
@@ -124,7 +127,9 @@ class StateMachine:
         self.history.append(("assistant", sentence_to_say))
         return {"transition": transition, "sentence": sentence_to_say}
 
-    def transition(self, action, input_text=None, enable_function_call=True):
+    def transition(
+        self, action: str, input_text: str = None, enable_function_call: bool = True
+    ):
         self.path.append((self.state, action))
         if action == "stop":
             self.state = "stop"
@@ -133,7 +138,7 @@ class StateMachine:
             return
         if action in self.transitions_graph[self.state]:
             if action in self.function_call and enable_function_call:
-                f_result = self.function_call[action](input_text)
+                f_result = self.function_calling(action, input_text)
                 if f_result:
                     self.knowledge.update(f_result)
             self.state = self.transitions_graph[self.state][action]
@@ -141,6 +146,61 @@ class StateMachine:
             raise ValueError(
                 f"No transition for action '{action}' in state '{self.state}'"
             )
+
+    def function_calling(self, action: str, input_text: str = None):
+        if callable(self.function_call[action]):
+            return self.function_call[action](input_text)
+        else:
+            # It is an endpoint
+            response = requests.post(
+                self.function_call[action],
+                json={"input_text": input_text, "knowledge": self.knowledge},
+            )
+            return response.json()
+
+    def select_i(self, input_text: str):
+        list_of_findings = self.knowledge["search_result"]
+        selection_generation = self.llm.invoke(
+            [
+                (
+                    "user",
+                    (
+                        f"Your role is to find the most probable index among the list {list_of_findings} based on the user input and conversation history. "
+                        f"Here is the history of the conversation:\n{self.history_to_string()}\n"
+                        f"Your output must be a single number between 0 and {len(list_of_findings)-1}, and nothing else."
+                        f"\nUser input was : {input_text}"
+                    ),
+                ),
+            ],
+            temperature=0,
+        ).content
+        if self.DEBUG:
+            print(f"LLM output: {selection_generation}")
+        # sub re in the generation
+        try:
+            selection_id = int(re.sub(r"[^0-9]", "", selection_generation)[-1])
+        except Exception:
+            print(self.history_to_string())
+            raise ValueError(
+                f"{self.history_to_string()}\n\nInvalid selection format. Expected a number inside, got '{selection_generation}'.\nInput text was : {input_text}"
+            )
+        try:
+            selected_recipe = list_of_findings[selection_id]
+        except IndexError:
+            print(self.history_to_string())
+            raise ValueError(
+                f"{self.history_to_string()}\n\nInvalid selection index. Expected a number between 0 and {len(list_of_findings)-1}, got {selection_id}.\nLLM generation : {selection_generation}"
+            )
+        if self.DEBUG:
+            print(f"Selected recipe: {selected_recipe}")
+        # open recipes
+        recipes = pd.read_json("data/corpus_recipe.jsonl", lines=True)
+        # Get the recipe where title = selected_recipe
+        recipe_json = recipes[recipes["title"] == selected_recipe].to_json(
+            orient="records"
+        )
+        # convert to json
+        return {"recipe_selected": recipe_json}
 
     def get_state(self):
         return self.state
