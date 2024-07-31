@@ -25,6 +25,8 @@ class StateMachine:
         self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
         self.llm = get_llm(ModelName.GPT_4_O)
         self.DEBUG = DEBUG
+        if self.DEBUG:
+            print(f"Debug mode is enabled for {self.__class__.__name__}")
 
     def __str__(self):
         return f"StateMachine(state={self.state})"
@@ -38,6 +40,9 @@ class StateMachine:
     def history_to_string(self):
         return "\n".join([f"{role}: {sentence}" for role, sentence in self.history])
 
+    def get_next_transitions(self):
+        return list(self.transitions_graph[self.state].keys())
+
     def get_response(self, input_text: str):
         # understand what's the transition ; then apply the transition ; then return the response
         transition_prompt = (
@@ -48,18 +53,18 @@ class StateMachine:
             "Here is the information about the history of the conversation:\n"
             f"{self.history_to_string()}\n"
             "Here is all the transitions you can take, based on the current state :\n"
-            f"{self.transitions_graph[self.state].keys()}\n"
-            "Pick only a transition listed above, or return the transition 'none' if you think there is no transition corresponding. "
+            f"{"\n-".join(self.get_next_transitions())}\n"
+            "Pick one transition listed above following the context of the user input, or return the transition 'none' if you think there is no transition corresponding. "
             "If you think that's the end of the conversation, return the transition 'stop'. "
             "Here is what you know in your context knowledge:\n"
             f"{self.knowledge}\n"
-            "Predicte just the transition, and nothing else, as : {'transition': 'transition_name'}"
+            "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
         )
         transition = self.llm.invoke(
-            [("system", transition_prompt), ("user", input_text)],
+            [("system", transition_prompt), ("user", f"Here is the user input : '{input_text}'")],
             temperature=0,
             response_format={"type": "json_object"},
-        ).content
+        ).content.lower()
         try:
             transition = json.loads(transition)["transition"]
         except KeyError:
@@ -106,23 +111,29 @@ class StateMachine:
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
                 "You should return the next sentence to say to the user. "
                 "The sentence should be short and look like oral language. "
-                "Your generation must look like a human transcription, and not like a machine generated text. "
+                "Be concise and go straight to the point. "
+                "Your generation must look like a human speech transcription, and not like a machine generated text. "
                 "Insert elements in your context knowledge for your answer when you think it's relevant. "
                 "Here is what you know in your context :\n"
                 f"{self.knowledge}"
                 f"Your sentence must correspond to the state '{self.state}'\n"
                 "Here is the information about the history of the conversation:\n"
                 f"{self.history_to_string()}\n"
-                "You need to inspire you from the state name to generate the next sentence, and use all the knowledge you can. "
+                "You need to inspire you from the state name to generate the next sentence, and use all the knowledge you can. Generate just a response, and nothing else."
                 "Do not forget to be polite and helpful."
             )
 
         sentence_to_say = self.llm.invoke(
-            [("system", next_sentence), ("user", input_text)],
+            [
+                ("system", next_sentence),
+                (
+                    "user",
+                    f"Here is the user input: {input_text}. Generate a response to this.",
+                ),
+            ],
             temperature=0,
             response_format={"type": "text"},
         ).content
-
         self.history.append(("user", input_text))
         self.history.append(("assistant", sentence_to_say))
         return {"transition": transition, "sentence": sentence_to_say}
