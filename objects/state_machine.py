@@ -11,9 +11,9 @@ class StateMachine:
     def __init__(
         self,
         transitions_graph: dict,
-        initial_state: str,
         function_call: dict,
         datafile: str,
+        initial_state: str = "Start",
         initial_sentence: str = "Hello ! What can I do for you ?",
         DEBUG: bool = False,
     ):

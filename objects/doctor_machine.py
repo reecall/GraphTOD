@@ -3,64 +3,75 @@ from .state_machine import StateMachine
 
 class DoctorMachine(StateMachine):
     def __init__(self, DEBUG=False):
-        initial_state = "start"
         initial_sentence = "Hello, welcome to your doctor office ! How can I help you ?"
         transitions_graph = {
-            "start": {
-                "ask_question": "faq",
-                "schedule_appointment": "patientInfo",
-                "edit_appointment": "askPatientName",
+            "Start": {
+                "ask_question": "Faq",
+                "schedule_appointment": "AskPatientInfo",
+                "edit_appointment": "AskPatientName",
             },
-            "faq": {
+            "Faq": {
                 "end": "stop",
-                "other_request": "start",
+                "other_request": "Start",
             },
-            "askDoctorName": {
+            "AskDoctorName": {
                 "identify_appointment_API": "idAppointmentAPI",
-                "reschedule_appointment": "datesAPI",
+                "reschedule_appointment": "ShowAvailableDates",
             },
-            "askPatientName": {
-                "identify_appointment": "confirmAppointmentFound",
+            "AskPatientName": {
+                "identify_appointment": "ConfirmAppointmentFound",
             },
-            "confirmAppointmentFound": {
-                "cancel_appointment": "appointmentCancellation",
-                "reminder_appointment": "appointmentReminder",
-                "reschedule_appointment": "datesAPI",
+            "ConfirmAppointmentFound": {
+                "cancel_appointment": "AppointmentCancellation",
+                "reminder_appointment": "AppointmentReminder",
+                "reschedule_appointment": "ShowAvailableDates",
             },
-            "appointmentCancellation": {
+            "AppointmentCancellation": {
                 "end": "stop",
-                "other_request": "start",
+                "other_request": "Start",
             },
-            "appointmentReminder": {
+            "AppointmentReminder": {
                 "end": "stop",
-                "other_request": "start",
+                "other_request": "Start",
             },
-            "patientInfo": {
-                "view_doctor_list": "doctorList",
+            "AskPatientInfo": {
+                "search_doctor_list": "ShowDoctorList",
             },
-            "doctorList": {
-                "available_dates_api": "datesAPI",
+            "ShowDoctorList": {
+                "select_doctor": "AskAppointmentDate",
             },
-            "datesAPI": {
-                "show_more": "moreInfo",
-                "choose_date": "appointmentBooked",
-                "other_doctor": "doctorList",
+            "AskAppointmentDate": {
+                "check_available_dates": "ShowAvailableDates",
             },
-            "moreInfo": {"return_dates_api": "datesAPI"},
-            "appointmentBooked": {
-                "end": "stop",
-                "other_request": "start",
+            "ShowAvailableDates": {
+                "show_more_dates": "MoreInfo",
+                "select_dates": "appointmentBooked",
+                "other_doctor": "ShowDoctorList",
             },
-            "stop": {},
+            "MoreInfo": {
+                "search_available_date": "ShowAvailableDates",
+            },
+            "AppointmentBooked": {
+                "end": "Stop",
+                "other_request": "Start",
+            },
+            "Stop": {},
         }
 
         function_call = {}
 
         super().__init__(
             transitions_graph=transitions_graph,
-            initial_state=initial_state,
             initial_sentence=initial_sentence,
             function_call=function_call,
-            datafile="data/corpus_recipe.jsonl",
+            datafile="data/corpus_doctor.jsonl",
             DEBUG=DEBUG,
         )
+
+        self.knowledge["available_dates"] = [
+            "8th october",
+            "12th october",
+            "15th october",
+            "17th october",
+            "20th october",
+        ]

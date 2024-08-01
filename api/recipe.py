@@ -4,6 +4,7 @@ import pandas as pd
 
 from fastapi import APIRouter
 from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
 
 
 recipe_router = APIRouter()
@@ -36,11 +37,11 @@ def search_recipe(req: SeachRecipe):
     else:
         recipe_name = req.knowledge.get("searched_recipe")
 
-    client = chromadb.PersistentClient()
+    client = chromadb.PersistentClient(path="../chroma")
     recipe_collection = client.get_collection("recipe")
-    embedder = reellm.get_embedding(reellm.ModelName.EMBEDDING_LARGE)
+    embedder = SentenceTransformer("all-mpnet-base-v2")
     result = recipe_collection.query(
-        embedder.embed_query(recipe_name), n_results=req.n_items
+        embedder.encode(recipe_name).tolist(), n_results=req.n_items
     )
     # print finded recipes
     print(result["documents"][0])
@@ -49,6 +50,7 @@ def search_recipe(req: SeachRecipe):
 
 class SuggestRecipe(BaseModel):
     input_text: str
+    knowledge: dict
     n_items: int = 3
 
 

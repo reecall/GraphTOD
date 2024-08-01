@@ -3,38 +3,37 @@ from .state_machine import StateMachine
 
 class RecipeMachine(StateMachine):
     def __init__(self, DEBUG=False):
-        initial_state = "start"
         initial_sentence = "Hello ! What do you want to cook today ?"
         transitions_graph = {
-            "start": {
-                "search_recipe": "shownResults",
-                "pick_random_recipe": "shownResults",
+            "Start": {
+                "search_recipe": "ShownResults",
+                "pick_random_recipe": "ShownResults",
             },
-            "shownResults": {
-                "explain_a_dish": "shownResults",
-                "repeat_recipes_options": "shownResults",
-                "select_a_recipe": "presentRecipeDetails",
-                "more_recipe_results": "shownResults",
+            "ShownResults": {
+                "explain_a_dish": "ShownResults",
+                "repeat_recipes_options": "ShownResults",
+                "select_a_recipe": "PresentRecipeDetails",
+                "more_recipe_results": "ShownResults",
             },
-            "presentRecipeDetails": {
-                "start_cooking": "startedTask",
-                "get_ingredients_of_recipe": "showIngredientsAndQuantities",
+            "PresentRecipeDetails": {
+                "start_cooking": "StartedTask",
+                "get_ingredients_of_recipe": "ShowIngredientsAndQuantities",
             },
-            "showIngredientsAndQuantities": {
+            "ShowIngredientsAndQuantities": {
                 "start_cooking": "started_task",
             },
-            "startedTask": {
-                "question_about_recipe": "recipeQuestionResponse",
-                "continue_recipe": "showStep",
+            "StartedTask": {
+                "question_about_recipe": "RecipeQuestionResponse",
+                "continue_recipe": "ShowStep",
             },
-            "showStep": {
-                "question_about_recipe": "recipeQuestionResponse",
-                "continue_recipe": "showStep",
+            "ShowStep": {
+                "question_about_recipe": "RecipeQuestionResponse",
+                "continue_recipe": "ShowStep",
                 "end_recipe": "stop",
             },
-            "recipeQuestionResponse": {
-                "question_about_recipe": "recipeQuestionResponse",
-                "continue_recipe": "showStep",
+            "RecipeQuestionResponse": {
+                "question_about_recipe": "RecipeQuestionResponse",
+                "continue_recipe": "ShowStep",
                 "end_recipe": "stop",
             },
         }
@@ -47,7 +46,6 @@ class RecipeMachine(StateMachine):
         }
         super().__init__(
             transitions_graph=transitions_graph,
-            initial_state=initial_state,
             function_call=function_call,
             initial_sentence=initial_sentence,
             datafile="data/corpus_recipe.jsonl",
