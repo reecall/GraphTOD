@@ -13,6 +13,7 @@ class StateMachine:
         transitions_graph: dict,
         initial_state: str,
         function_call: dict,
+        datafile: str,
         initial_sentence: str = "Hello ! What can I do for you ?",
         DEBUG: bool = False,
     ):
@@ -25,6 +26,7 @@ class StateMachine:
         self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
         self.llm = get_llm(ModelName.GPT_4_O)
         self.DEBUG = DEBUG
+        self.datafile = datafile
         if self.DEBUG:
             print(f"Debug mode is enabled for {self.__class__.__name__}")
 
@@ -203,15 +205,15 @@ class StateMachine:
                 f"{self.history_to_string()}\n\nInvalid selection index. Expected a number between 0 and {len(list_of_findings)-1}, got {selection_id}.\nLLM generation : {selection_generation}"
             )
         if self.DEBUG:
-            print(f"Selected recipe: {selected_recipe}")
+            print(f"Selected element: {selected_recipe}")
         # open recipes
-        recipes = pd.read_json("data/corpus_recipe.jsonl", lines=True)
+        recipes = pd.read_json(self.datafile, lines=True)
         # Get the recipe where title = selected_recipe
         recipe_json = recipes[recipes["title"] == selected_recipe].to_json(
             orient="records"
         )
         # convert to json
-        return {"recipe_selected": recipe_json}
+        return {"selected_element": recipe_json}
 
     def get_state(self):
         return self.state

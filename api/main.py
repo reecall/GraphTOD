@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
 from api.recipe import recipe_router
+from api.car import car_router
 
 universes: List[dict]
 DEBUG: bool = True
@@ -27,4 +28,9 @@ app.add_middleware(
 app.include_router(
     recipe_router,
     prefix="/recipe",
+)
+
+app.include_router(
+    car_router,
+    prefix="/car",
 )

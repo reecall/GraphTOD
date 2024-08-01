@@ -1,0 +1,3 @@
+from objects.recipe_machine import RecipeMachine
+from objects.rent_car_machine import RentCarMachine
+from objects.doctor_machine import DoctorMachine

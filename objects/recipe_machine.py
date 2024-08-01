@@ -7,39 +7,36 @@ class RecipeMachine(StateMachine):
         initial_sentence = "Hello ! What do you want to cook today ?"
         transitions_graph = {
             "start": {
-                "search_recipe": "shown_results",
-                "pick_random_recipe": "shown_results",
+                "search_recipe": "shownResults",
+                "pick_random_recipe": "shownResults",
             },
-            "shown_results": {
-                "explain_a_dish": "shown_results",
-                "repeat_dishes_options": "shown_results",
-                "select_a_recipe": "present_recipe_details",
-                "more_recipe_results": "shown_results",
+            "shownResults": {
+                "explain_a_dish": "shownResults",
+                "repeat_recipes_options": "shownResults",
+                "select_a_recipe": "presentRecipeDetails",
+                "more_recipe_results": "shownResults",
             },
-            "present_recipe_details": {
-                "begin_recipe": "started_task",
-                "get_ingredients_and_quantities": "show_ingredients_and_quantities",
+            "presentRecipeDetails": {
+                "start_cooking": "startedTask",
+                "get_ingredients_of_recipe": "showIngredientsAndQuantities",
             },
-            "show_ingredients_and_quantities": {"begin_recipe": "started_task"},
-            "started_task": {
-                "in-task_qa": "in-task_response",
-                "next_step": "show_step",
-                "goto_step": "show_step",
-                "done": "no_more_steps",
+            "showIngredientsAndQuantities": {
+                "start_cooking": "started_task",
             },
-            "show_step": {
-                "in-task_qa": "in-task_response",
-                "next_step": "show_step",
-                "goto_step": "show_step",
-                "done": "no_more_steps",
+            "startedTask": {
+                "question_about_recipe": "recipeQuestionResponse",
+                "continue_recipe": "showStep",
             },
-            "in-task_response": {
-                "in-task_qa": "in-task_response",
-                "next_step": "show_step",
-                "goto_step": "show_step",
-                "done": "no_more_steps",
+            "showStep": {
+                "question_about_recipe": "recipeQuestionResponse",
+                "continue_recipe": "showStep",
+                "end_recipe": "stop",
             },
-            "no_more_steps": {"acknowledge": "stop"},
+            "recipeQuestionResponse": {
+                "question_about_recipe": "recipeQuestionResponse",
+                "continue_recipe": "showStep",
+                "end_recipe": "stop",
+            },
         }
 
         function_call = {
@@ -53,6 +50,7 @@ class RecipeMachine(StateMachine):
             initial_state=initial_state,
             function_call=function_call,
             initial_sentence=initial_sentence,
+            datafile="data/corpus_recipe.jsonl",
             DEBUG=DEBUG,
         )
 
