@@ -4,45 +4,92 @@ from .state_machine import StateMachine
 class RentCarMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello, welcome to Rent A Car ! How can I help you ?"
+        # transitions_graph = {
+        #     "start": {
+        #         "rent_car": "search_car_options",
+        #         "ask_for_help": "provide_help",
+        #     },
+        #     "provide_help": {
+        #         "answer_question": "ask_rental_details",
+        #         "transfer_to_agent": "stop",
+        #     },
+        #     "search_car_options": {
+        #         "show_car_options": "shown_car_options",
+        #         "no_cars_available": "stop",
+        #     },
+        #     "shown_car_options": {
+        #         "explain_a_car": "shown_car_options",
+        #         "select_a_car": "confirm_rental_details",
+        #         "more_car_options": "search_car_options",
+        #     },
+        #     "confirm_rental_details": {
+        #         "confirm_details": "process_payment",
+        #         "modify_details": "ask_rental_details",
+        #     },
+        #     "process_payment": {
+        #         "payment_successful": "confirm_reservation",
+        #         "payment_failed": "ask_payment_details",
+        #     },
+        #     "ask_payment_details": {
+        #         "provide_payment_details": "process_payment",
+        #         "cancel_rental": "stop",
+        #     },
+        #     "confirm_reservation": {
+        #         "ask_a_question": "provide_help",
+        #         "no_more_help": "stop",
+        #     },
+        # }
+
         transitions_graph = {
-            "Start": {
-                "to_rent_car": "SearchCarOptions",
-                "ask_for_help": "ProvideHelp",
+            "start": {
+                "ask_question": "ResponseFAQ",
+                "pick_up_vehicle": "AskLicensePlateNumber",
+                "cancel_reservation": "AskLicensePlateNumber",
+                "extend_reservation": "AskLicensePlateNumber",
+                "make_a_reservation": "AskDateAndTime",
             },
-            "ProvideHelp": {
-                "answer_question": "ask_rental_details",
-                "transfer_to_agent": "stop",
+            "ResponseFAQ": {
+                "end": "stop",
+                "other_request": "start",
             },
-            "SearchCarOptions": {
-                "show_car_options": "ShownCarOptions",
-                "no_cars_available": "stop",
+            "AskLicensePlateNumber": {
+                "give_license_plate": "CollectLicensePlateNumber",
             },
-            "ShownCarOptions": {
-                "explain_a_car": "ShownCarOptions",
-                "select_a_car": "ConfirmRentalDetails",
-                "more_car_options": "search_car_options",
+            "CollectLicensePlateNumber": {
+                "pick_up_vehicle": "InfoViaAPI",
+                "cancel_reservation": "Cancellation",
+                "extend_reservation": "AskDateAndTime",
             },
-            "ConfirmRentalDetails": {
-                "confirm_details": "ProcessPayment",
-                "modify_details": "ask_rental_details",
+            "InfoViaAPI": {
+                "end": "stop",
             },
-            "ProcessPayment": {
-                "payment_successful": "ConfirmReservation",
-                "payment_failed": "AskPaymentDetails",
+            "Cancellation": {
+                "end": "stop",
+                "make_a_reservation": "AskDateAndTime",
             },
-            "AskPaymentDetails": {
-                "provide_payment_details": "process_payment",
-                "cancel_rental": "stop",
+            "AskDateAndTime": {
+                "provide_date": "ResponseAccordingToAPIDispo",
             },
-            "ConfirmReservation": {
-                "ask_a_question": "ProvideHelp",
-                "no_more_help": "stop",
+            "ResponseAccordingToAPIDispo": {
+                "see_vehicles": "VehiclesAvailableAccordingToAPIDispo",
             },
+            "VehiclesAvailableAccordingToAPIDispo": {
+                "provide_date": "ResponseAccordingToAPIDispo",
+                "select_vehicle": "ValidateReservation",
+                "ask_more_info": "MoreInfo",
+            },
+            "ValidateReservation": {
+                "end": "stop",
+            },
+            "MoreInfo": {
+                "return_vehicle_disponibilities": "VehiclesAvailableAccordingToAPIDispo",
+            },
+            "stop": {}
         }
 
         function_call = {
-            "select_a_car": self.select_i,
-            "show_car_options": "http://127.0.0.1:8000/car/search",
+            "select_vehicle": self.select_i,
+            "see_vehicles": "http://127.0.0.1:8000/car/search",
         }
 
         super().__init__(
