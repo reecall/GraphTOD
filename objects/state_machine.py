@@ -97,8 +97,8 @@ class StateMachine:
             next_sentence = (
                 "You're a agent specialized in state transition graph. "
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
-                "You should return the next sentence to say to the user, knowing that it's the end of the conversation."
-                "The sentence should be short and look like oral language."
+                "You should return the next sentence to say to the user, knowing that it's the end of the conversation, and that there will be no user entry after this sentence. "
+                "The sentence should be short and look like oral language. "
                 "Your generation must look like a human transcription, and not like a machine generated text. "
                 "Insert elements in your context knowledge for your answer when you think it's relevant. "
                 "Here is what you know in your context :\n"

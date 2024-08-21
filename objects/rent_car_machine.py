@@ -7,9 +7,7 @@ class RentCarMachine(StateMachine):
         transitions_graph = {
             "InitialState": {
                 "ask_question": "ResponseFAQ",
-                "pick_up_vehicle": "AskLicensePlateNumber",
-                "cancel_reservation": "AskLicensePlateNumber",
-                "extend_reservation": "AskLicensePlateNumber",
+                "manage_a_reservation": "AskLicensePlateNumber",
                 "make_a_reservation": "AskDateAndTime",
             },
             "ResponseFAQ": {
@@ -20,11 +18,12 @@ class RentCarMachine(StateMachine):
                 "give_license_plate": "CollectLicensePlateNumber",
             },
             "CollectLicensePlateNumber": {
-                "pick_up_vehicle": "InfoViaAPI",
+                "pick_up_vehicule": "PickUpInfo",
                 "cancel_reservation": "Cancellation",
                 "extend_reservation": "AskDateAndTime",
             },
-            "InfoViaAPI": {
+            "PickUpInfo": {
+                "other_request": "InitialState",
                 "end": "stop",
             },
             "Cancellation": {
@@ -32,28 +31,27 @@ class RentCarMachine(StateMachine):
                 "make_a_reservation": "AskDateAndTime",
             },
             "AskDateAndTime": {
-                "provide_date": "ResponseAccordingToAPIDispo",
+                "check_date_available": "AskVehiculeType",
             },
-            "ResponseAccordingToAPIDispo": {
-                "see_vehicles": "VehiclesAvailableAccordingToAPIDispo",
+            "AskVehiculeType": {
+                "see_vehicules": "VehiculesAvailables",
             },
-            "VehiclesAvailableAccordingToAPIDispo": {
-                "provide_date": "ResponseAccordingToAPIDispo",
-                "select_vehicle": "ValidateReservation",
-                "ask_more_info": "MoreInfo",
+            "VehiculesAvailables": {
+                "select_vehicule": "AskNameToValidateReservation",
             },
-            "ValidateReservation": {
+            "AskNameToValidateReservation": {
+                "process_reservation": "SummaryReservation",
+            },
+            "SummaryReservation": {
                 "end": "stop",
-            },
-            "MoreInfo": {
-                "return_vehicle_disponibilities": "VehiclesAvailableAccordingToAPIDispo",
+                "other_request": "InitialState",
             },
             "Stop": {},
         }
 
         function_call = {
-            "select_vehicle": self.select_i,
-            "see_vehicles": "/car/search",
+            "select_vehicule": self.select_i,
+            "see_vehicules": "/car/search",
         }
 
         super().__init__(
