@@ -35,3 +35,26 @@ def search_cars(req: SearchCar):
     print(recipe_name)
 
     return {"search_result": recipe_name["search_result"]}
+
+
+@car_router.post("/date")
+def search_date(req: SeachRecipe):
+    model = reellm.get_llm(reellm.ModelName.GPT_4_O)
+    # Search available dates according to the user input
+    recipe_name = model.invoke(
+        [
+            (
+                "user",
+                f"You role is either to return {req.n_items} different dates that match the user input, or to generate randomly if the user can book the date they asked for. You can use a full date or just 'next monday', and return a JSON formatted as {{'search_result': ['date1', 'date2', 'date3']}} or {{'search_result': ['available', 'not available']}}",
+            ),
+            ("user", f"Here is the user input : {req.input_text}"),
+        ],
+        temperature=0,
+        response_format={"type": "json_object"},
+    ).content
+
+    recipe_name = json.loads(recipe_name)
+
+    print(recipe_name)
+
+    return {"search_result": recipe_name["search_result"]}
