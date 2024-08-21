@@ -8,14 +8,14 @@ from pydantic import BaseModel
 car_router = APIRouter()
 
 
-class SeachRecipe(BaseModel):
+class SearchCar(BaseModel):
     input_text: str
     knowledge: dict
     n_items: int = 3
 
 
 @car_router.post("/search")
-def search_cars(req: SeachRecipe):
+def search_cars(req: SearchCar):
     model = reellm.get_llm(reellm.ModelName.GPT_4_O)
     # Search cars models according to the user input
     recipe_name = model.invoke(

@@ -25,6 +25,6 @@ while True:
     user_input = input("You: ")
     sm.history.append(("user", user_input))
     output = sm.get_response(user_input)
-    if sm.state == "stop":
+    if sm.state.lower() == "stop":
         print(f"Agent: {sm.history[-1][1]}")
         break

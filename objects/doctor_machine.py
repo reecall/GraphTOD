@@ -5,18 +5,14 @@ class DoctorMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello, welcome to your doctor office ! How can I help you ?"
         transitions_graph = {
-            "Start": {
+            "InitialState": {
                 "ask_question": "Faq",
                 "schedule_appointment": "AskPatientInfo",
                 "edit_appointment": "AskPatientName",
             },
             "Faq": {
                 "end": "stop",
-                "other_request": "Start",
-            },
-            "AskDoctorName": {
-                "identify_appointment_API": "idAppointmentAPI",
-                "reschedule_appointment": "ShowAvailableDates",
+                "other_request": "InitialState",
             },
             "AskPatientName": {
                 "identify_appointment": "ConfirmAppointmentFound",
@@ -28,13 +24,16 @@ class DoctorMachine(StateMachine):
             },
             "AppointmentCancellation": {
                 "end": "stop",
-                "other_request": "Start",
+                "other_request": "InitialState",
             },
             "AppointmentReminder": {
                 "end": "stop",
-                "other_request": "Start",
+                "other_request": "InitialState",
             },
             "AskPatientInfo": {
+                "save_patient_info": "AskDoctorName",
+            },
+            "AskDoctorName": {
                 "search_doctor_list": "ShowDoctorList",
             },
             "ShowDoctorList": {
@@ -53,12 +52,15 @@ class DoctorMachine(StateMachine):
             },
             "AppointmentBooked": {
                 "end": "Stop",
-                "other_request": "Start",
+                "other_request": "InitialState",
             },
             "Stop": {},
         }
 
-        function_call = {}
+        function_call = {
+            "search_doctor_list": "http://127.0.0.1:8000/doctor/search",
+            "select_doctor": self.select_i,
+        }
 
         super().__init__(
             transitions_graph=transitions_graph,
@@ -67,11 +69,3 @@ class DoctorMachine(StateMachine):
             datafile="data/corpus_doctor.jsonl",
             DEBUG=DEBUG,
         )
-
-        self.knowledge["available_dates"] = [
-            "8th october",
-            "12th october",
-            "15th october",
-            "17th october",
-            "20th october",
-        ]

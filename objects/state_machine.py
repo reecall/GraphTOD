@@ -13,7 +13,7 @@ class StateMachine:
         transitions_graph: dict,
         function_call: dict,
         datafile: str,
-        initial_state: str = "Start",
+        initial_state: str = "InitialState",
         initial_sentence: str = "Hello ! What can I do for you ?",
         DEBUG: bool = False,
     ):
@@ -145,7 +145,7 @@ class StateMachine:
     ):
         self.path.append((self.state, action))
         if action == "stop":
-            self.state = "stop"
+            self.state = "Stop"
             return
         if action == "none":
             return
@@ -198,18 +198,18 @@ class StateMachine:
                 f"{self.history_to_string()}\n\nInvalid selection format. Expected a number inside, got '{selection_generation}'.\nInput text was : {input_text}"
             )
         try:
-            selected_recipe = list_of_findings[selection_id]
+            selected_element = list_of_findings[selection_id]
         except IndexError:
             print(self.history_to_string())
             raise ValueError(
                 f"{self.history_to_string()}\n\nInvalid selection index. Expected a number between 0 and {len(list_of_findings)-1}, got {selection_id}.\nLLM generation : {selection_generation}"
             )
         if self.DEBUG:
-            print(f"Selected element: {selected_recipe}")
+            print(f"Selected element: {selected_element}")
         # open recipes
         recipes = pd.read_json(self.datafile, lines=True)
         # Get the recipe where title = selected_recipe
-        recipe_json = recipes[recipes["title"] == selected_recipe].to_json(
+        recipe_json = recipes[recipes["title"] == selected_element].to_json(
             orient="records"
         )
         # convert to json
@@ -226,7 +226,7 @@ class StateMachine:
         sm = cls()
         walk = []
         rd.seed(seed)
-        while sm.state != "stop":
+        while sm.state.lower() != "stop":
             action = rd.choice(list(sm.transitions_graph[sm.state].keys()))
             walk.append((sm.state, action))
             sm.transition(action, enable_function_call=False)

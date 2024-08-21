@@ -5,6 +5,7 @@ from typing import List
 
 from api.recipe import recipe_router
 from api.car import car_router
+from api.doctor import doctor_router
 
 universes: List[dict]
 DEBUG: bool = True
@@ -33,4 +34,9 @@ app.include_router(
 app.include_router(
     car_router,
     prefix="/car",
+)
+
+app.include_router(
+    doctor_router,
+    prefix="/doctor",
 )

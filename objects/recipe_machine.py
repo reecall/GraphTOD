@@ -5,7 +5,7 @@ class RecipeMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello ! What do you want to cook today ?"
         transitions_graph = {
-            "Start": {
+            "InitialState": {
                 "search_recipe": "ShownResults",
                 "pick_random_recipe": "ShownResults",
             },
@@ -34,7 +34,7 @@ class RecipeMachine(StateMachine):
             "RecipeQuestionResponse": {
                 "question_about_recipe": "RecipeQuestionResponse",
                 "continue_recipe": "ShowStep",
-                "end_recipe": "stop",
+                "end_recipe": "Stop",
             },
         }
 
