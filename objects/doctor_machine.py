@@ -58,7 +58,7 @@ class DoctorMachine(StateMachine):
         }
 
         function_call = {
-            "search_doctor_list": "http://127.0.0.1:8000/doctor/search",
+            "search_doctor_list": "/doctor/search",
             "select_doctor": self.select_i,
         }
 

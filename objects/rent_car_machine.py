@@ -53,7 +53,7 @@ class RentCarMachine(StateMachine):
 
         function_call = {
             "select_vehicle": self.select_i,
-            "see_vehicles": "http://127.0.0.1:8000/car/search",
+            "see_vehicles": "/car/search",
         }
 
         super().__init__(

@@ -15,6 +15,7 @@ class StateMachine:
         datafile: str,
         initial_state: str = "InitialState",
         initial_sentence: str = "Hello ! What can I do for you ?",
+        api_adress = "http://127.0.0.1:8000",
         DEBUG: bool = False,
     ):
         self.state = initial_state
@@ -22,6 +23,7 @@ class StateMachine:
         self.history = [("assistant", initial_sentence)]
         self.path = []
         self.function_call = function_call
+        self.api_adress = api_adress
         self.knowledge = {}
         self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
         self.llm = get_llm(ModelName.GPT_4_O)
@@ -166,7 +168,7 @@ class StateMachine:
         else:
             # It is an endpoint
             response = requests.post(
-                self.function_call[action],
+                self.api_adress + self.function_call[action],
                 json={"input_text": input_text, "knowledge": self.knowledge},
             )
             return response.json()

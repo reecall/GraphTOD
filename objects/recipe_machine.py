@@ -39,10 +39,10 @@ class RecipeMachine(StateMachine):
         }
 
         function_call = {
-            "search_recipe": "http://127.0.0.1:8000/recipe/search",
-            "pick_random_recipe": "http://127.0.0.1:8000/recipe/suggest",
+            "search_recipe": "/recipe/search",
+            "pick_random_recipe": "/recipe/suggest",
             "select_a_recipe": self.select_i,
-            "more_results": "http://127.0.0.1:8000/recipe/more_results",
+            "more_results": "/recipe/more_results",
         }
         super().__init__(
             transitions_graph=transitions_graph,
