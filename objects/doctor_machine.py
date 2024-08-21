@@ -54,7 +54,6 @@ class DoctorMachine(StateMachine):
                 "end": "Stop",
                 "other_request": "InitialState",
             },
-            "Stop": {},
         }
 
         function_call = {

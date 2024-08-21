@@ -46,7 +46,6 @@ class RentCarMachine(StateMachine):
                 "end": "stop",
                 "other_request": "InitialState",
             },
-            "Stop": {},
         }
 
         function_call = {

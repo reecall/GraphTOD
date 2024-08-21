@@ -4,7 +4,7 @@ Implementation of the [SyntTOD](https://arxiv.org/abs/2404.14772v1) paper, which
 
 ## Introduction
 
-Ce framework permet de construire des graphes d'état-transition pour modéliser les interactions utilisateur-agent dans des systèmes de dialogue ou d'autres applications basées sur des événements. Il utilise des nœuds et des transitions explicites pour définir les actions et les réactions dans le système, en facilitant l'intégration avec des API et des fonctions personnalisées. /
+Ce framework permet de construire des graphes d'état-transition pour modéliser les interactions utilisateur-agent dans des systèmes de dialogue ou d'autres applications basées sur des événements. Il utilise des nœuds et des transitions explicites pour définir les actions et les réactions dans le système, en facilitant l'intégration avec des API et des fonctions personnalisées. \
 De plus, ce framework permet de générer des dataset de dialogue pour l'entraînement de modèles de langage naturel.
 
 ## Formalisme des graphes
