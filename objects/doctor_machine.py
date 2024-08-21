@@ -44,7 +44,7 @@ class DoctorMachine(StateMachine):
             },
             "ShowAvailableDates": {
                 "show_more_dates": "MoreInfo",
-                "select_dates": "appointmentBooked",
+                "select_dates": "AppointmentBooked",
                 "other_doctor": "ShowDoctorList",
             },
             "MoreInfo": {
