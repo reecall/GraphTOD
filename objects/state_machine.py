@@ -174,7 +174,13 @@ class StateMachine:
             return response.json()
 
     def select_i(self, input_text: str):
-        list_of_findings = self.knowledge["search_result"]
+        try:
+            list_of_findings = self.knowledge["search_result"]
+        except KeyError:
+            print(self.knowledge)
+            raise ValueError(
+                f"No search result in the context knowledge.\nInput text was : {input_text}"
+            )
         selection_generation = self.llm.invoke(
             [
                 (

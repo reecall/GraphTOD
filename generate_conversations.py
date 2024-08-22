@@ -57,7 +57,7 @@ def main(machine, loop: int):
         seed = rd.randint(0, 999999999999)  # random seed
         user.set_state_machine(sm)
         try:
-            conv, rd_walk = user.generate_conversation(model, seed)
+            conv, rd_walk = user.generate_conversation(model, graph_description, seed)
             # save conversation in a file
             with open(f"{machine.__name__}_simulated_conversation.jsonl", "a") as f:
                 f.write(

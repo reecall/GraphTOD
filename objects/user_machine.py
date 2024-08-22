@@ -42,7 +42,7 @@ class UserMachine:
             "informations": self.informations,
         }
 
-    def generate_conversation(self, model, seed: int):
+    def generate_conversation(self, model, graph_description: str, seed: int):
         history = []
         rd.seed(seed)
         sm = self.state_machine
@@ -64,6 +64,7 @@ class UserMachine:
                     (
                         "You should act as a user interacting with an agent. "
                         f"Here is the user properties : {str(self)}.\n"
+                        f"Here is a summary of the graph : {graph_description}\n"
                         "Your goal is to generate the next user sentence of a dialog between a human and an agent, based on the intent of the user and the last agent sentence. "
                         "To generate the next user input, you must follow the conversation flow, what the agent is asking and the user intent. "
                         "For context, here is the history of the conversation, where you are the user:\n"
@@ -99,7 +100,7 @@ class UserMachine:
             history.append(
                 {"role": "user", "text": user_input, "transition": output["transition"]}
             )
-            if sm.state == "stop":
+            if sm.state == "Stop":
                 history.append(
                     {"role": "assistant", "text": sm.history[-1][1], "state": sm.state}
                 )

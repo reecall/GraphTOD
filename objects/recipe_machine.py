@@ -29,13 +29,14 @@ class RecipeMachine(StateMachine):
             "ShowStep": {
                 "question_about_recipe": "RecipeQuestionResponse",
                 "continue_recipe": "ShowStep",
-                "end_recipe": "stop",
+                "end_recipe": "Stop",
             },
             "RecipeQuestionResponse": {
                 "question_about_recipe": "RecipeQuestionResponse",
                 "continue_recipe": "ShowStep",
                 "end_recipe": "Stop",
             },
+            "Stop": {},
         }
 
         function_call = {

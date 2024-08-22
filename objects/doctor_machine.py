@@ -6,13 +6,8 @@ class DoctorMachine(StateMachine):
         initial_sentence = "Hello, welcome to your doctor office ! How can I help you ?"
         transitions_graph = {
             "InitialState": {
-                "ask_question": "Faq",
-                "schedule_appointment": "AskPatientInfo",
-                "edit_appointment": "AskPatientName",
-            },
-            "Faq": {
-                "end": "stop",
-                "other_request": "InitialState",
+                "schedule_doctor_appointment": "AskPatientInfo",
+                "edit_doctor_appointment": "AskPatientName",
             },
             "AskPatientName": {
                 "identify_appointment": "ConfirmAppointmentFound",
@@ -20,44 +15,34 @@ class DoctorMachine(StateMachine):
             "ConfirmAppointmentFound": {
                 "cancel_appointment": "AppointmentCancellation",
                 "reminder_appointment": "AppointmentReminder",
-                "reschedule_appointment": "ShowAvailableDates",
+                "reschedule_appointment": "ShowAvailableSlots",
             },
             "AppointmentCancellation": {
-                "end": "stop",
-                "other_request": "InitialState",
+                "end": "Stop",
             },
             "AppointmentReminder": {
-                "end": "stop",
-                "other_request": "InitialState",
+                "end": "Stop",
             },
             "AskPatientInfo": {
                 "save_patient_info": "AskDoctorName",
             },
             "AskDoctorName": {
-                "search_doctor_list": "ShowDoctorList",
+                "search_doctor_in_list": "ShowDoctorList",
             },
             "ShowDoctorList": {
-                "select_doctor": "AskAppointmentDate",
+                "select_doctor": "ShowAvailableSlots",
             },
-            "AskAppointmentDate": {
-                "check_available_dates": "ShowAvailableDates",
-            },
-            "ShowAvailableDates": {
-                "show_more_dates": "MoreInfo",
+            "ShowAvailableSlots": {
                 "select_dates": "AppointmentBooked",
                 "other_doctor": "ShowDoctorList",
             },
-            "MoreInfo": {
-                "search_available_date": "ShowAvailableDates",
-            },
             "AppointmentBooked": {
                 "end": "Stop",
-                "other_request": "InitialState",
             },
         }
 
         function_call = {
-            "search_doctor_list": "/doctor/search",
+            "search_doctor_in_list": "/doctor/search",
             "select_doctor": self.select_i,
         }
 

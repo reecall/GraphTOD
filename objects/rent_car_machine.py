@@ -6,13 +6,8 @@ class RentCarMachine(StateMachine):
         initial_sentence = "Hello, welcome to Rent A Car ! How can I help you ?"
         transitions_graph = {
             "InitialState": {
-                "ask_question": "ResponseFAQ",
-                "manage_a_reservation": "AskLicensePlateNumber",
-                "make_a_reservation": "AskDateAndTime",
-            },
-            "ResponseFAQ": {
-                "end": "stop",
-                "other_request": "InitialState",
+                "make_a_reservation": "AskLicensePlateNumber",
+                "edit_a_reservation": "AskDateAndTime",
             },
             "AskLicensePlateNumber": {
                 "give_license_plate": "CollectLicensePlateNumber",
@@ -24,10 +19,10 @@ class RentCarMachine(StateMachine):
             },
             "PickUpInfo": {
                 "other_request": "InitialState",
-                "end": "stop",
+                "end": "Stop",
             },
             "Cancellation": {
-                "end": "stop",
+                "end": "Stop",
                 "make_a_reservation": "AskDateAndTime",
             },
             "AskDateAndTime": {
@@ -43,9 +38,9 @@ class RentCarMachine(StateMachine):
                 "process_reservation": "SummaryReservation",
             },
             "SummaryReservation": {
-                "end": "stop",
-                "other_request": "InitialState",
+                "end": "Stop",
             },
+            "Stop": {},
         }
 
         function_call = {
