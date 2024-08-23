@@ -50,6 +50,7 @@ if (api_key and model_name and selected_provider == "openai") or (
         api_key=api_key,
         endpoint=deployment_endpoint,
     )
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -57,6 +58,7 @@ if (api_key and model_name and selected_provider == "openai") or (
         json_input = st.text_area(
             "Enter your state transition graph in JSON format",
             help="Enter here your state-transition graph formatted as explained in the readme.",
+            height=500,
         )
 
     with col2:
@@ -86,27 +88,38 @@ if (api_key and model_name and selected_provider == "openai") or (
             num_rows="dynamic",
         )
 
+    # Convert function calling to a json "transition": "api_endpoint"
+    function_calling = function_calling_df.dropna().to_dict(orient="records")
+    function_calling = {
+        item["Transition"]: item["API Endpoint"] for item in function_calling
+    }
+
     generate_button = st.button(
         "Generate conversation dataset",
         use_container_width=True,
         type="primary",
         key="generate_button",
     )
-    # download_config_button = st.download_button(
-    #     label="Download configuration",
-    #     data=None,
-    #     file_name="conversation_config.json",
-    #     mime="application/json",
-    # )
+
+    config_data = {
+        "transitions_graph": json.loads(json_input) if json_input else "",
+        "function_call": function_calling,
+        "datafile": "",
+        "initial_sentence": initial_sentence,
+        "api_adress": custom_api_url,
+    }
+    with st.sidebar:
+        st.download_button(
+            "Download json config",
+            data=json.dumps(config_data, indent=4, ensure_ascii=False),
+            use_container_width=True,
+            file_name="graph_config.json",
+            mime="application/json",
+        )
+
     if generate_button:
         try:
             state_graph = json.loads(json_input)
-
-            # Convert function calling to a json "transition": "api_endpoint"
-            function_calling = function_calling_df.dropna().to_dict(orient="records")
-            function_calling = {
-                item["Transition"]: item["API Endpoint"] for item in function_calling
-            }
 
             sm = StateMachine(
                 state_graph,
@@ -125,12 +138,14 @@ if (api_key and model_name and selected_provider == "openai") or (
                 )
 
             # Show on example of conversation
+            st.markdown("---")
             st.subheader("Example of generated conversation")
             example_conv = generated_conversations[0]["conversation"]
             st.write(
-                "\n".join(
+                " <br />".join(
                     [f"[{line['role']}]: {line['text']}" for line in example_conv]
-                )
+                ),
+                unsafe_allow_html=True,
             )
 
             st.download_button(
