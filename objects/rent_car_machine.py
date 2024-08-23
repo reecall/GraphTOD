@@ -40,7 +40,6 @@ class RentCarMachine(StateMachine):
             "SummaryReservation": {
                 "end": "Stop",
             },
-            "Stop": {},
         }
 
         function_call = {

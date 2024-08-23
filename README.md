@@ -12,6 +12,19 @@ Il généré à chaque étape de la conversation.
 Parmi les transitions accessibles à partir du noeud courant on en choisi une aléatoirement.
 Le LLM qui joue soit l'agent, soit l'utilisateur devra générer une phrase en utilisant la transition sélectionnée.
 
+## Environment variables
+
+To use the program with command lines, you need to set the environment variables. You can do this by creating a `.env` file in the root directory of the project and adding the following variables:
+
+```plaintext
+DEFAULT_OPENAI_TYPE =
+DEFAULT_OPENAI_DEPLOYMENT_NAME=
+DEFAULT_OPENAI_ENDPOINT=
+DEFAULT_OPENAI_API_KEY=
+```
+
+For `DEFAULT_OPENAI_TYPE` you can choose between 'openai' and 'azure_openai'. Also, `DEFAULT_OPENAI_ENDPOINT` is needed only for 'azure_openai' type.
+
 ## Formalisme des graphes
 
 ### Definition d'un graphe
@@ -23,9 +36,8 @@ Le graphe d'état-transition est une structure de données qui définit les acti
 Un nœud est défini par un nom suivi de ses transitions possibles. Chaque transition est décrite par une action utilisateur et l'action correspondante de l'agent, qui mène à un autre nœud. Les nœuds doivent être nommés en CamelCase et les transitions en snake_case. Par défaut, le nœud initial est nommé "InitialState".
 Un noeud est une action de l'agent, il utilise un verbe d'action et un complément qui décrit comment appliquer le verbe.
 
-Le nom d'un noeud est écrit tel que : 
+Le nom d'un noeud est écrit tel que :
 "VerbeComplément".
-
 
 #### Exemple
 
@@ -43,7 +55,6 @@ Pour nommer la transition le complément fonctionne comme pour les noeuds.
 Le nom d'une transition est écrit tel que :
 "verbe_complément"
 
-
 #### Exemple
 
 "cancel_reservation" , "select_doctor", "schedule_appointment", ...
@@ -52,19 +63,20 @@ Le nom d'une transition est écrit tel que :
 "action_utilisateur" : "ActionAgent"
 ```
 
-### Construire un graphe 
+### Construire un graphe
 
 Un graphe est construit comme un dictionnaire python.
 Il est composé de nœuds et de transitions qui seront écrit en suivant les définitions ci-dessus.
+
 ```
-monDict = { 
-    "Noeud1" :  { 
-        "arête" : "Noeud2" 
+monDict = {
+    "Noeud1" :  {
+        "arête" : "Noeud2"
         }
 }
 
-monDict =  { 
-    "VerbeComplément1" : { 
+monDict =  {
+    "VerbeComplément1" : {
         "verbe_complément" : "VerbeComplément2",
         "verbe_complément" : "VerbeComplément1",
     },
@@ -122,7 +134,7 @@ La fonction select_i sert à faire sélectionner au LLM parmis une liste d'élé
 
 #### Exemple d'utilisation de Fonction dans un agent
 
-Ici on appelle une api pour l'action *see_vehicules* et on utilise la fonction *select_i* pour l'action *select_vehicule*.
+Ici on appelle une api pour l'action _see_vehicules_ et on utilise la fonction _select_i_ pour l'action _select_vehicule_.
 
 ```python
 graphe = {
@@ -135,7 +147,7 @@ graphe = {
 }
 function_call = {
     "select_vehicule": select_i,
-    "see_vehicules": "/car/search", 
+    "see_vehicules": "/car/search",
 }
 ```
 
@@ -167,8 +179,8 @@ TransitionsGraph = {
 
 ### Persona
 
-Le framework génère automatiquement des personas d'utilisateurs en fonction du contenu de l'agent, créés par un modèle de langage (LLM). 
-Le contenu de l'agent est résumé par un LLM puis utilisé en tant que contenxte pour générer des personnalités d'utilisateurs 
+Le framework génère automatiquement des personas d'utilisateurs en fonction du contenu de l'agent, créés par un modèle de langage (LLM).
+Le contenu de l'agent est résumé par un LLM puis utilisé en tant que contenxte pour générer des personnalités d'utilisateurs
 qui sont pertinentes avec l'agent.
 
 Chaque persona a un nom généré automatiquement, un âge, et leurs préférences.
@@ -176,17 +188,15 @@ Chaque persona a un nom généré automatiquement, un âge, et leurs préférenc
 Exemple :
 Agent de prise de rdv médicaux, les persona générés auront des préférences pour les médecins, les horaires, etc.
 
-
-
 ### Explications supplémentaires
-Les transitions générées par le random walk ne seront pas suivies quand on oublie une transition 
-qui permet de passer logiquement à la suite ou bien quand on lui demande un truc illogique. 
-Respecter la logique des choses : un état fait une seule chose, on ne suppose pas qu'une action 
-supplémentaire sera réalisée dedans. Par exemple : avoir une date de rdv c'est uniquement 
-donner les dates des rdv, ça ne comprend pas l'interaction avec l'utilisateur (sa réponse sera 
-une transition vers un autre noeud). On décomposera en demande d'une date de rdv, réponse avec 
-les dates de rdv, puis sélection des dates de rdv. 
 
+Les transitions générées par le random walk ne seront pas suivies quand on oublie une transition
+qui permet de passer logiquement à la suite ou bien quand on lui demande un truc illogique.
+Respecter la logique des choses : un état fait une seule chose, on ne suppose pas qu'une action
+supplémentaire sera réalisée dedans. Par exemple : avoir une date de rdv c'est uniquement
+donner les dates des rdv, ça ne comprend pas l'interaction avec l'utilisateur (sa réponse sera
+une transition vers un autre noeud). On décomposera en demande d'une date de rdv, réponse avec
+les dates de rdv, puis sélection des dates de rdv.
 
 ### Exemple entier de graphe d'agent
 
@@ -251,8 +261,3 @@ et pour voir les véhicules disponibles.
             "provide_date": "http://127.0.0.1:8000/car/date",
         }
 ```
-
-### LLM utilisé
-GPT 4o
-
-

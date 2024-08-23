@@ -5,8 +5,8 @@ import random as rd
 from datetime import datetime
 from tqdm import tqdm
 from faker import Faker
-from reellm import get_llm, ModelName
 from objects import RecipeMachine, DoctorMachine, RentCarMachine
+from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
 from dotenv import load_dotenv
 
@@ -16,10 +16,9 @@ load_dotenv(override=True)
 def main(machine, loop: int):
     global DEBUG
     fake = Faker(locale="en_US")
-    model = get_llm(ModelName.GPT_4_O)
     sm = machine(DEBUG=DEBUG)
     graph_description = (
-        get_llm(ModelName.GPT_4_O)
+        get_ai_model()()
         .invoke(
             f"I will send you a state-transition graph, and I want you to explain in one sentence the goal of this graph. The graph is the one of a phone agent. \n Here is the graph :\n {sm.transitions_graph}",
             temperature=0.3,
@@ -32,7 +31,7 @@ def main(machine, loop: int):
         sm = machine(DEBUG=DEBUG)
         # Generate with an LLM between 2 and 6 person caracteristics
         preferences = (
-            get_llm(ModelName.GPT_4_O)
+            get_ai_model()()
             .invoke(
                 f"Generate 10 general preferences for a person, where the conversation goal is : {graph_description}. Generate something in a json format such as {{'preferences': ['like fish', 'is tired', 'like astronomie']}}. Be creative.",
                 temperature=0.9,
@@ -57,7 +56,9 @@ def main(machine, loop: int):
         seed = rd.randint(0, 999999999999)  # random seed
         user.set_state_machine(sm)
         try:
-            conv, rd_walk = user.generate_conversation(model, graph_description, seed)
+            conv, rd_walk = user.generate_conversation(
+                get_ai_model(), graph_description, seed
+            )
             # save conversation in a file
             with open(f"{machine.__name__}_simulated_conversation.jsonl", "a") as f:
                 f.write(

@@ -4,7 +4,7 @@ import pandas as pd
 import random as rd
 import requests
 
-from reellm import get_llm, get_embedding, ModelName
+from objects.AI_model import AIModel, get_ai_model
 
 
 class StateMachine:
@@ -25,8 +25,7 @@ class StateMachine:
         self.function_call = function_call
         self.api_adress = api_adress
         self.knowledge = {}
-        self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
-        self.llm = get_llm(ModelName.GPT_4_O)
+        self.llm: AIModel = get_ai_model()
         self.DEBUG = DEBUG
         self.datafile = datafile
         if self.DEBUG:
@@ -64,7 +63,7 @@ class StateMachine:
             f"{self.knowledge}\n"
             "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
         )
-        transition = self.llm.invoke(
+        transition = self.llm().invoke(
             [("system", transition_prompt), ("user", f"Here is the user input : '{input_text}'")],
             temperature=0,
             response_format={"type": "json_object"},
@@ -127,7 +126,7 @@ class StateMachine:
                 "Do not forget to be polite and helpful."
             )
 
-        sentence_to_say = self.llm.invoke(
+        sentence_to_say = self.llm().invoke(
             [
                 ("system", next_sentence),
                 (
@@ -181,7 +180,7 @@ class StateMachine:
             raise ValueError(
                 f"No search result in the context knowledge.\nInput text was : {input_text}"
             )
-        selection_generation = self.llm.invoke(
+        selection_generation = self.llm().invoke(
             [
                 (
                     "user",
