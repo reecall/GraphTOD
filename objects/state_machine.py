@@ -12,17 +12,27 @@ class StateMachine:
         self,
         transitions_graph: dict,
         function_call: dict,
-        datafile: str,
+        datafile: str = None,
         initial_state: str = "InitialState",
         initial_sentence: str = "Hello ! What can I do for you ?",
         api_adress = "http://127.0.0.1:8000",
         DEBUG: bool = False,
     ):
+        # Define string name of prefab functions
+        self.prefab_functions = {
+            "select_i": self.select_i,
+        }
         self.state = initial_state
         self.transitions_graph = transitions_graph
         self.history = [("assistant", initial_sentence)]
         self.path = []
+
         self.function_call = function_call
+        # convert string to function
+        for key, value in self.function_call.items():
+            if value in self.prefab_functions.keys():
+                self.function_call[key] = self.prefab_functions[value]
+
         self.api_adress = api_adress
         self.knowledge = {}
         self.llm: AIModel = get_ai_model()
@@ -38,6 +48,15 @@ class StateMachine:
         return {
             "state": self.state,
             "transitions_graph": self.transitions_graph,
+        }
+    
+    def get_config(self) -> dict:
+        return {
+            "transitions_graph": self.transitions_graph,
+            "function_call": self.function_call,
+            "datafile": self.datafile,
+            "initial_sentence": self.history[0][1],
+            "api_adress": self.api_adress,
         }
 
     def history_to_string(self):
@@ -213,9 +232,11 @@ class StateMachine:
             )
         if self.DEBUG:
             print(f"Selected element: {selected_element}")
-        # open recipes
+        if not self.datafile:
+            return {"selected_element": selected_element}
+        # open datafile
         recipes = pd.read_json(self.datafile, lines=True)
-        # Get the recipe where title = selected_recipe
+        # Get the data where title = selected_element
         recipe_json = recipes[recipes["title"] == selected_element].to_json(
             orient="records"
         )

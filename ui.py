@@ -1,26 +1,25 @@
 import streamlit as st
 import json
 import pandas as pd
+
+from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
-
-
-# Function to generate dataset from state transition graph
-def generate_dataset(state_graph):
-    pass
+from generate_conversations import generate_convs
 
 
 st.set_page_config(
     page_title="Conversation generator",
-    page_icon="🤖",
+    page_icon="🗣️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # Streamlit app
-st.title("OpenAI or Azure OpenAI State Transition Dataset Generator")
+st.title("🗣️ Conversation dataset generator")
 
 # API Key input
 with st.sidebar:
+    st.title("Conversation generator")
     # add a two button for openai and azure openai
     selected_provider = st.radio(
         "👇 First, select a provider",
@@ -32,6 +31,9 @@ with st.sidebar:
     api_key = st.text_input("Enter your OpenAI API Key", type="password")
     if selected_provider == "azure_openai":
         deployment_endpoint = st.text_input("Enter your Deployment Endpoint", "")
+
+    # add a markdown delimiter
+    st.markdown("---")
 
 if (api_key and model_name and selected_provider == "openai") or (
     api_key
@@ -67,29 +69,75 @@ if (api_key and model_name and selected_provider == "openai") or (
         placeholder="Hello my name is John, how can I help you ?",
     )
 
+    custom_api_url = st.text_input(
+        "Enter the custom API URL",
+        placeholder="https://my_custom_api.com/",
+    )
+
     # slider to generate from 1 to 1000 samples
     num_samples = st.slider("Number of conversation to generate", 1, 1000, 100)
 
     # add a panel where you can assigne transition to api endpoint
-    with st.expander("Function calling assignation"):
-        st.data_editor(
+    with st.expander("Function calling settings"):
+        function_calling_df = st.data_editor(
             pd.DataFrame(columns=["Transition", "API Endpoint"]),
             hide_index=True,
             use_container_width=True,
             num_rows="dynamic",
         )
 
-    if st.button("Generate conversation dataset", use_container_width=True):
+    generate_button = st.button(
+        "Generate conversation dataset",
+        use_container_width=True,
+        type="primary",
+        key="generate_button",
+    )
+    # download_config_button = st.download_button(
+    #     label="Download configuration",
+    #     data=None,
+    #     file_name="conversation_config.json",
+    #     mime="application/json",
+    # )
+    if generate_button:
         try:
             state_graph = json.loads(json_input)
-            df = generate_dataset(state_graph)
-            st.write(df)
-            csv = df.to_csv(index=False).encode("utf-8")
+
+            # Convert function calling to a json "transition": "api_endpoint"
+            function_calling = function_calling_df.dropna().to_dict(orient="records")
+            function_calling = {
+                item["Transition"]: item["API Endpoint"] for item in function_calling
+            }
+
+            sm = StateMachine(
+                state_graph,
+                function_calling,
+                initial_sentence=initial_sentence,
+                api_adress=custom_api_url,
+            )
+            with st.spinner("Generating conversations..."):
+                generated_conversations = generate_convs(sm, num_samples)
+                # Convert the a list of dict to a jsonlines file
+                generated_conversations_jsonl = "\n".join(
+                    [
+                        json.dumps(conv, ensure_ascii=False)
+                        for conv in generated_conversations
+                    ]
+                )
+
+            # Show on example of conversation
+            st.subheader("Example of generated conversation")
+            example_conv = generated_conversations[0]["conversation"]
+            st.write(
+                "\n".join(
+                    [f"[{line['role']}]: {line['text']}" for line in example_conv]
+                )
+            )
+
             st.download_button(
-                label="Download Dataset as CSV",
-                data=csv,
-                file_name="state_transition_dataset.csv",
-                mime="text/csv",
+                label="Download generated dataset as a jsonlines",
+                data=generated_conversations_jsonl,
+                file_name="generated_conversations.jsonl",
+                mime="application/json",
             )
         except json.JSONDecodeError:
             st.error("Invalid JSON input. Please correct it and try again.")
