@@ -4,6 +4,9 @@ import reellm
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from dotenv import find_dotenv, load_dotenv
+load_dotenv(find_dotenv())
+
 
 car_router = APIRouter()
 
@@ -38,14 +41,14 @@ def search_cars(req: SearchCar):
 
 
 @car_router.post("/date")
-def search_date(req: SeachRecipe):
+def search_date(req: SearchCar):
     model = reellm.get_llm(reellm.ModelName.GPT_4_O)
     # Search available dates according to the user input
     recipe_name = model.invoke(
         [
             (
                 "user",
-                f"You role is either to return {req.n_items} different dates that match the user input, or to generate randomly if the user can book the date they asked for. You can use a full date or just 'next monday', and return a JSON formatted as {{'search_result': ['date1', 'date2', 'date3']}} or {{'search_result': ['available', 'not available']}}",
+                f"You role is either to return {req.n_items} different dates that match the user input, or to generate randomly if the user can book the date they asked for, 0 being not possible, and 1 is possible. You can use a full date or just 'next monday', and return a JSON formatted as {{'search_result': ['date1', 'date2', 'date3']}} or {{'search_result': ['0', '1']}}",
             ),
             ("user", f"Here is the user input : {req.input_text}"),
         ],

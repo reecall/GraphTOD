@@ -179,6 +179,8 @@ Agent de prise de rdv médicaux, les persona générés auront des préférences
 
 
 ### Explications supplémentaires
+
+#### A écrire au propre
 Les transitions générées par le random walk ne seront pas suivies quand on oublie une transition 
 qui permet de passer logiquement à la suite ou bien quand on lui demande un truc illogique. 
 Respecter la logique des choses : un état fait une seule chose, on ne suppose pas qu'une action 
@@ -186,6 +188,22 @@ supplémentaire sera réalisée dedans. Par exemple : avoir une date de rdv c'es
 donner les dates des rdv, ça ne comprend pas l'interaction avec l'utilisateur (sa réponse sera 
 une transition vers un autre noeud). On décomposera en demande d'une date de rdv, réponse avec 
 les dates de rdv, puis sélection des dates de rdv. 
+
+bien respecter ACTION humain, puis ACTION machine
+on ne peux pas enchaîner deux actions d'affilée pour la machine comme pour l'humain
+
+respecter la logique : les transitions déclenchées par l'humain ne peuvent pas nécessiter une action de la 
+machine pour fonctionner correctement, sinon ça veut dire qu'il manque un noeud ou une transition pour gérer 
+ces cas là.
+
+Pour être sur que le résumé du graphe soit correct pour la persona, il faut que les informations 
+critiques pour les actions de l'agent soient dans les premiers noeuds du graphes. Explication possible :
+les LLMs sont plus sensibles aux informations au début du contexte.
+
+Trick : pour faire faire un choix je fais une transition "wait_for_choice_un" : ChoiceValidated, 
+puis "wait_for_choice_deux" : ChoiceNotValidated, pour que au hasard il choisisse l'un ou l'autre
+et utilise les bons noeuds pour le choix correspondant.
+
 
 
 ### Exemple entier de graphe d'agent

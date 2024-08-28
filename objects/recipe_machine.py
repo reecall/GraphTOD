@@ -20,7 +20,7 @@ class RecipeMachine(StateMachine):
                 "get_ingredients_of_recipe": "ShowIngredientsAndQuantities",
             },
             "ShowIngredientsAndQuantities": {
-                "start_cooking": "started_task",
+                "start_cooking": "StartedTask",
             },
             "StartedTask": {
                 "question_about_recipe": "RecipeQuestionResponse",
@@ -35,8 +35,7 @@ class RecipeMachine(StateMachine):
                 "question_about_recipe": "RecipeQuestionResponse",
                 "continue_recipe": "ShowStep",
                 "end_recipe": "Stop",
-            },
-            "Stop": {},
+            }
         }
 
         function_call = {

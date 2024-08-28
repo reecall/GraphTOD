@@ -6,7 +6,7 @@ from datetime import datetime
 from tqdm import tqdm
 from faker import Faker
 from reellm import get_llm, ModelName
-from objects import RecipeMachine, DoctorMachine, RentCarMachine
+from objects import RecipeMachine, DoctorMachine, RentCarMachine, HotelMachine, WorkerAgendaMachine
 from objects.user_machine import UserMachine
 from dotenv import load_dotenv
 
@@ -22,6 +22,7 @@ def main(machine, loop: int):
         get_llm(ModelName.GPT_4_O)
         .invoke(
             f"I will send you a state-transition graph, and I want you to explain in one sentence the goal of this graph. The graph is the one of a phone agent. \n Here is the graph :\n {sm.transitions_graph}",
+            # f"Here is also the opening sentence an agent would say with this graph ",
             temperature=0.3,
         )
         .content
@@ -59,7 +60,7 @@ def main(machine, loop: int):
         try:
             conv, rd_walk = user.generate_conversation(model, graph_description, seed)
             # save conversation in a file
-            with open(f"{machine.__name__}_simulated_conversation.jsonl", "a") as f:
+            with open(f"generated_conv/{machine.__name__}_simulated_conversation.jsonl", "a") as f:
                 f.write(
                     json.dumps(
                         {
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     args.add_argument("-n", "--num", type=int, default=1)
     args.add_argument("-m", "--machine", type=str)
     args = args.parse_args()
-    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine}
+    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine, "hotel": HotelMachine, "worker": WorkerAgendaMachine}
     if args.machine not in machines:
         raise ValueError(f"Machine {args.machine} not found")
     DEBUG = args.debug
