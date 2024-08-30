@@ -1,10 +1,12 @@
 import streamlit as st
 import json
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
 from generate_conversations import generate_convs
+from show_graph import get_graph_dot
 
 
 st.set_page_config(
@@ -54,6 +56,8 @@ if (api_key and model_name and selected_provider == "openai") or (
     col1, col2 = st.columns(2)
 
     with col1:
+        # Create a switch button to choose between json visualisation or graph visualisation
+
         # JSON input for state transition graph
         json_input = st.text_area(
             "Enter your state transition graph in JSON format",
@@ -62,9 +66,15 @@ if (api_key and model_name and selected_provider == "openai") or (
         )
 
     with col2:
+        see_graph_toggle = st.toggle("Visualize the graph", False)
         if json_input:
-            # visualize json
-            st.json(json_input)
+            if see_graph_toggle:
+                # visualize graph
+                graph_dot = get_graph_dot(json.loads(json_input), "Conversation")
+                st.graphviz_chart(graph_dot)
+            else:
+                # visualize json
+                st.json(json_input)
 
     initial_sentence = st.text_input(
         "Enter your initial sentence",
@@ -139,20 +149,52 @@ if (api_key and model_name and selected_provider == "openai") or (
 
             # Show on example of conversation
             st.markdown("---")
-            st.subheader("Example of generated conversation")
-            example_conv = generated_conversations[0]["conversation"]
-            st.write(
-                " <br />".join(
-                    [f"[{line['role']}]: {line['text']}" for line in example_conv]
-                ),
-                unsafe_allow_html=True,
-            )
+            r_col1, r_col2 = st.columns(2)
+            with r_col1:
 
+                st.subheader("Example of generated conversation")
+                example_conv = generated_conversations[0]["conversation"]
+                st.write(
+                    " <br />".join(
+                        [f"[{line['role']}]: {line['text']}" for line in example_conv]
+                    ),
+                    unsafe_allow_html=True,
+                )
+
+            with r_col2:
+                # make stats about users
+                st.subheader("Stats about generated conversations persona")
+                users_df = pd.DataFrame(
+                    [conv["user"] for conv in generated_conversations]
+                )
+                # Create a pie chart for gender distribution
+                gender_counts = users_df["gender"].value_counts()
+                plt.figure(figsize=(8, 6))
+                plt.pie(gender_counts, labels=gender_counts.index, autopct="%1.1f%%")
+                plt.title("Gender Distribution")
+                plt.axis("equal")
+                st.pyplot(plt)
+                # Create a pie chart for age distribution
+                # 18/24, 25/34, 35/49, 50/64, et 65 et plus
+                age_bins = [18, 25, 35, 50, 65, 100]
+                age_labels = ["18-24", "25-34", "35-49", "50-64", "65+"]
+                users_df["age"] = pd.cut(
+                    users_df["age"], bins=age_bins, labels=age_labels
+                )
+                age_counts = users_df["age"].value_counts()
+                plt.figure(figsize=(8, 6))
+                plt.pie(age_counts, labels=age_counts.index, autopct="%1.1f%%")
+                plt.title("Age Distribution")
+                plt.axis("equal")
+                st.pyplot(plt)
+
+            st.write("<center>", unsafe_allow_html=True)
             st.download_button(
                 label="Download generated dataset as a jsonlines",
                 data=generated_conversations_jsonl,
                 file_name="generated_conversations.jsonl",
                 mime="application/json",
             )
+            st.write("</center>", unsafe_allow_html=True)
         except json.JSONDecodeError:
             st.error("Invalid JSON input. Please correct it and try again.")
