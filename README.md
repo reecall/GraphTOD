@@ -204,7 +204,8 @@ Trick : pour faire faire un choix je fais une transition "wait_for_choice_un" : 
 puis "wait_for_choice_deux" : ChoiceNotValidated, pour que au hasard il choisisse l'un ou l'autre
 et utilise les bons noeuds pour le choix correspondant.
 
-
+Expliquer comment faire des étapes pour laisser le temps à l'agent de répondre sans que l'utilisateur
+le coupe en lui demandant quelque chose de nouveau derrière.
 
 ### Exemple entier de graphe d'agent
 

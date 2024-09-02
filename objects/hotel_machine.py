@@ -3,7 +3,7 @@ from .state_machine import StateMachine
 
 class HotelMachine(StateMachine):
     def __init__(self, DEBUG=False):
-        initial_sentence = "Hello, what can I do for you ? do you need help find a hotel or deal with a previous booking ?"
+        initial_sentence = "Hello, what can I do for you ?" # do you need help find a hotel or deal with a previous booking ?"
 
         transitions_graph = {
             "InitialState": {
@@ -11,30 +11,37 @@ class HotelMachine(StateMachine):
             },
             "InScopeResponse": {
                 "end": "stop",
-                "other_request": "RequestType",
+                "other_booking": "RequestType",
             },
             "RequestType": {
                 "search_hotel": "DisplayHotels",
                 "cancel_or_modify_reservation": "BookingFound",
             },
             "DisplayHotels": {
-                "display_more": "DisplayHotelDetails",
+                "ask_for_more_hotel": "DisplayHotels",
                 "select_hotel": "BookHotel",
+                "ask_for_details": "DisplayHotelDetails",
             },
             "DisplayHotelDetails": {
-                "show_other_hotels": "DisplayHotels",
+                "select_hotel": "BookHotel",
+                "ask_for_more_hotel": "DisplayHotels",
             },
             "BookHotel": {
-                "choose_payment_type": "Payment",
+                "ask_payment_type": "PaymentProcess",
             },
-            "Payment": {
+            "PaymentProcess": {
+                "pay": "PaymentAccepted",
+            },
+            "PaymentAccepted": {
                 "request_invoice": "SendInvoice",
                 "end": "Stop",
-                "other_request": "RequestType",
+                "other_request": "InScopeResponse",
+                "other_booking": "RequestType",
             },
             "SendInvoice": {
                 "end": "Stop",
-                "other_request": "RequestType",
+                "other_request": "InScopeResponse",
+                "other_booking": "RequestType",
             },
             "BookingFound": {
                 "criteria_to_modify": "ModificationPossible",
@@ -45,19 +52,22 @@ class HotelMachine(StateMachine):
             },
             "OtherCriteriaAdded": {
                 "end": "Stop",
-                "other_request": "RequestType",
+                "other_request": "InScopeResponse",
+                "other_booking": "RequestType",
             },
             "CheckRefund": {
                 "wait_refund_un": "Refund",
-                "wait_refun_deux": "RefundImpossible",
+                "wait_refund_deux": "RefundImpossible",
             },
             "Refund": {
-                "other_request": "RequestType",
+                "other_request": "InScopeResponse",
+                "other_booking": "RequestType",
                 "end": "Stop",
             },
             "RefundImpossible": {
                 "end": "Stop",
-                "other_request": "RequestType",
+                "other_request": "InScopeResponse",
+                "other_booking": "RequestType",
             }
         }
 
@@ -66,6 +76,7 @@ class HotelMachine(StateMachine):
         function_call = {
             "select_hotel": self.select_i,
             "search_hotel": "/hotel/search",
+            "ask_for_more_hotel": "/hotel/search",
         }
 
         super().__init__(
