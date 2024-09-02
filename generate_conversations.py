@@ -5,7 +5,13 @@ import random as rd
 from datetime import datetime
 from tqdm import tqdm
 from faker import Faker
-from objects import RecipeMachine, DoctorMachine, RentCarMachine, HotelMachine, WorkerAgendaMachine
+from objects import (
+    RecipeMachine,
+    DoctorMachine,
+    RentCarMachine,
+    HotelMachine,
+    WorkerAgendaMachine,
+)
 from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
 from dotenv import load_dotenv
@@ -77,7 +83,8 @@ def generate_convs(
             if do_save:
                 # save conversation in a file
                 with open(
-                    f"{initial_machine.__name__}_simulated_conversation.jsonl", "a"
+                    f"{initial_machine.__class__.__name__}_simulated_conversation.jsonl",
+                    "a",
                 ) as f:
                     f.write(
                         json.dumps(
@@ -98,11 +105,17 @@ if __name__ == "__main__":
     args.add_argument("-n", "--num", type=int, default=1)
     args.add_argument("-m", "--machine", type=str)
     args = args.parse_args()
-    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine, "hotel": HotelMachine, "worker": WorkerAgendaMachine}
+    machines = {
+        "recipe": RecipeMachine,
+        "car": RentCarMachine,
+        "doctor": DoctorMachine,
+        "hotel": HotelMachine,
+        "worker": WorkerAgendaMachine,
+    }
     if args.machine not in machines:
         raise ValueError(f"Machine {args.machine} not found")
     generate_convs(
-        machine=machines[args.machine](DEBUG=args.debug),
+        initial_machine=machines[args.machine](DEBUG=args.debug),
         loop=args.num,
         do_save=True,
         use_debug=args.debug,
