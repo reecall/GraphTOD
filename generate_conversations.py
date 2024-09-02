@@ -5,7 +5,7 @@ import random as rd
 from datetime import datetime
 from tqdm import tqdm
 from faker import Faker
-from objects import RecipeMachine, DoctorMachine, RentCarMachine
+from objects import RecipeMachine, DoctorMachine, RentCarMachine, HotelMachine, WorkerAgendaMachine
 from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
 from dotenv import load_dotenv
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     args.add_argument("-n", "--num", type=int, default=1)
     args.add_argument("-m", "--machine", type=str)
     args = args.parse_args()
-    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine}
+    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine, "hotel": HotelMachine, "worker": WorkerAgendaMachine}
     if args.machine not in machines:
         raise ValueError(f"Machine {args.machine} not found")
     generate_convs(

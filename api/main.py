@@ -6,6 +6,8 @@ from typing import List
 from api.recipe import recipe_router
 from api.car import car_router
 from api.doctor import doctor_router
+from api.hotel import hotel_router
+from api.worker import worker_router
 
 universes: List[dict]
 DEBUG: bool = True
@@ -39,4 +41,14 @@ app.include_router(
 app.include_router(
     doctor_router,
     prefix="/doctor",
+)
+
+app.include_router(
+    hotel_router,
+    prefix="/hotel",
+)
+
+app.include_router(
+    worker_router,
+    prefix="/worker",
 )

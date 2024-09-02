@@ -25,6 +25,7 @@ class StateMachine:
         self.state = initial_state
         self.transitions_graph = transitions_graph
         self.history = [("assistant", initial_sentence)]
+        self.initial_sentence = initial_sentence
         self.path = []
 
         self.function_call = function_call
@@ -77,7 +78,7 @@ class StateMachine:
             "Here is all the transitions you can take, based on the current state :\n"
             f"{"\n-".join(self.get_next_transitions())}\n"
             "Pick one transition listed above following the context of the user input, or return the transition 'none' if you think there is no transition corresponding. "
-            "If you think that's the end of the conversation, return the transition 'stop'. "
+            "If you think that's the end of the conversation, return the transition 'end'. "
             "Here is what you know in your context knowledge:\n"
             f"{self.knowledge}\n"
             "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
@@ -111,7 +112,7 @@ class StateMachine:
                 "You need to inspire you from the state name to generate the next sentence. "
                 "Do not forget to be polite and helpful."
             )
-        elif transition == "stop":
+        elif transition == "end":
             next_sentence = (
                 "You're a agent specialized in state transition graph. "
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
@@ -164,7 +165,7 @@ class StateMachine:
         self, action: str, input_text: str = None, enable_function_call: bool = True
     ):
         self.path.append((self.state, action))
-        if action == "stop":
+        if action == "end":
             self.state = "Stop"
             return
         if action == "none":

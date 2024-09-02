@@ -20,7 +20,7 @@ class RecipeMachine(StateMachine):
                 "get_ingredients_of_recipe": "ShowIngredientsAndQuantities",
             },
             "ShowIngredientsAndQuantities": {
-                "start_cooking": "started_task",
+                "start_cooking": "StartedTask",
             },
             "StartedTask": {
                 "question_about_recipe": "RecipeQuestionResponse",

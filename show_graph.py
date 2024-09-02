@@ -1,6 +1,9 @@
 import graphviz as gv
 import argparse
-from objects import RecipeMachine, DoctorMachine, RentCarMachine
+from objects import RecipeMachine, DoctorMachine, RentCarMachine, HotelMachine, WorkerAgendaMachine
+from dotenv import find_dotenv, load_dotenv
+load_dotenv(find_dotenv())
+
 
 
 def get_graph_dot(transitions_graph: dict, name: str):
@@ -26,7 +29,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("-m", "--machine", type=str)
     args = args.parse_args()
-    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine}
+    machines = {"recipe": RecipeMachine, "car": RentCarMachine, "doctor": DoctorMachine, "hotel": HotelMachine, "worker": WorkerAgendaMachine}
     if args.machine not in machines:
         raise ValueError(f"Machine {args.machine} not found")
     sm = machines[args.machine]()
