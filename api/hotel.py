@@ -1,11 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 import json
-import reellm
 
-
-from dotenv import find_dotenv, load_dotenv
-load_dotenv(find_dotenv())
+from objects.AI_model import get_ai_model
 
 
 hotel_router = APIRouter()
@@ -19,7 +16,7 @@ class SearchHotel(BaseModel):
 
 @hotel_router.post("/search")
 def search_hotels(req: SearchHotel):
-    model = reellm.get_llm(reellm.ModelName.GPT_4_O)
+    model = get_ai_model()
     # Search cars models according to the user input
     hotel_name = model.invoke(
         [

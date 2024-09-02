@@ -4,9 +4,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from objects.AI_model import get_ai_model
 
-from dotenv import find_dotenv, load_dotenv
-load_dotenv(find_dotenv())
-
 
 car_router = APIRouter()
 
@@ -46,7 +43,7 @@ def search_cars(req: SearchCar):
 
 @car_router.post("/date")
 def search_date(req: SearchCar):
-    model = reellm.get_llm(reellm.ModelName.GPT_4_O)
+    model = get_ai_model()
     # Search available dates according to the user input
     recipe_name = model.invoke(
         [
@@ -65,4 +62,3 @@ def search_date(req: SearchCar):
     print(recipe_name)
 
     return {"search_result": recipe_name["search_result"]}
-
