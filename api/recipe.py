@@ -1,10 +1,10 @@
 import chromadb
-import reellm
 import pandas as pd
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
+from objects.AI_model import get_ai_model
 
 
 recipe_router = APIRouter()
@@ -18,20 +18,24 @@ class SeachRecipe(BaseModel):
 
 @recipe_router.post("/search")
 def search_recipe(req: SeachRecipe):
-    model = reellm.get_llm(reellm.ModelName.MIXTRAL_8X22B)
+    model = get_ai_model()
     # Extract the recipe name from the user input
     if not req.knowledge.get("search_result"):
-        recipe_name = model.invoke(
-            [
-                (
-                    "system",
-                    "Your role is to extract only the food name from the input sentence of the user.\nReturn only the extracted plate of food type that you find in the input and nothing else.",
-                ),
-                ("user", req.input_text),
-            ],
-            temperature=0,
-            max_tokens=6,
-        ).content
+        recipe_name = (
+            model()
+            .invoke(
+                [
+                    (
+                        "system",
+                        "Your role is to extract only the food name from the input sentence of the user.\nReturn only the extracted plate of food type that you find in the input and nothing else.",
+                    ),
+                    ("user", req.input_text),
+                ],
+                temperature=0,
+                max_tokens=6,
+            )
+            .content
+        )
         req.knowledge["searched_recipe"] = recipe_name
         print(f"Recipe extracted: {recipe_name}")
     else:

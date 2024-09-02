@@ -1,9 +1,10 @@
 import chromadb
-import reellm
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
+
+from objects.AI_model import get_ai_model
 
 
 doctor_router = APIRouter()
@@ -17,20 +18,24 @@ class SearchDoctor(BaseModel):
 
 @doctor_router.post("/search")
 def search_recipe(req: SearchDoctor):
-    model = reellm.get_llm(reellm.ModelName.MIXTRAL_8X22B)
+    model = get_ai_model()
     # Extract the recipe name from the user input
     if not req.knowledge.get("search_result"):
-        doctor_name = model.invoke(
-            [
-                (
-                    "system",
-                    "Your role is to extract only the doctor name from the input sentence of the user.\nReturn only the extracted name that you find in the input and nothing else.",
-                ),
-                ("user", req.input_text),
-            ],
-            temperature=0,
-            max_tokens=10,
-        ).content
+        doctor_name = (
+            model()
+            .invoke(
+                [
+                    (
+                        "system",
+                        "Your role is to extract only the doctor name from the input sentence of the user.\nReturn only the extracted name that you find in the input and nothing else.",
+                    ),
+                    ("user", req.input_text),
+                ],
+                temperature=0,
+                max_tokens=10,
+            )
+            .content
+        )
         req.knowledge["searched_doctor"] = doctor_name
         print(f"Doctor name extracted: {doctor_name}")
     else:

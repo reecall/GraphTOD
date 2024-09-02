@@ -1,4 +1,3 @@
-reellm
 chromadb
 graphviz
 sentence-transformers

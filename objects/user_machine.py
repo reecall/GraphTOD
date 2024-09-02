@@ -1,6 +1,7 @@
 import random as rd
 
 from objects.state_machine import StateMachine
+from objects.AI_model import AIModel
 
 
 class UserMachine:
@@ -42,7 +43,7 @@ class UserMachine:
             "informations": self.informations,
         }
 
-    def generate_conversation(self, model, graph_description: str, seed: int):
+    def generate_conversation(self, model: AIModel, graph_description: str, seed: int):
         history = []
         rd.seed(seed)
         sm = self.state_machine
@@ -81,10 +82,14 @@ class UserMachine:
                 ),
             ]
 
-            user_input = model.invoke(
-                prompt,
-                temperature=0.2,
-            ).content
+            user_input = (
+                model()
+                .invoke(
+                    prompt,
+                    temperature=0.2,
+                )
+                .content
+            )
 
             output = sm.get_response(user_input)
             if output["transition"] != next_transition:

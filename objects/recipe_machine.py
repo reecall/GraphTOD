@@ -35,7 +35,7 @@ class RecipeMachine(StateMachine):
                 "question_about_recipe": "RecipeQuestionResponse",
                 "continue_recipe": "ShowStep",
                 "end_recipe": "Stop",
-            }
+            },
         }
 
         function_call = {
