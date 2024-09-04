@@ -3,33 +3,25 @@ from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from objects.hotel_machine import HotelMachine
-from objects.rent_car_machine import RentCarMachine
+from objects import HotelMachine, RentCarMachine
 
 
 # I want to write a function that extracts the node names from the tradesman machine
-def extract_nodes(tradesman_machine):
-    states = []
-    transitions = []
-    for state, transition in tradesman_machine.items():
-        states.append(state)
-        for j in transition :
-            transitions.append(j)
-    return states, transitions
+def extract_nodes(machine: dict):
+    return set(machine.keys()), set(machine.values())
 
-def create_adj_mat(states,machine):
-    adj_matrix = {
-        state: [0] * len(states) for state in states
-    }
+
+def create_adj_mat(states, machine):
+    adj_matrix = {state: [0] * len(states) for state in states}
 
     # Mapping each transition to the adjacency matrix
     for state, transitions in machine.items():
         for _, target in transitions.items():
-            row = states.index(state)
             col = states.index(target)
             adj_matrix[state][col] = 1
 
     return np.array([adj_matrix[state] for state in states])
+
 
 def find_all_paths(adjacency_matrix, start, stop, max_depth=15):
     stack = [(start, [start])]
@@ -54,6 +46,7 @@ def find_all_paths(adjacency_matrix, start, stop, max_depth=15):
 
     return all_paths
 
+
 def assign_name_to_path(all_theory_paths, states):
     all_readable_paths = []
     for path in all_theory_paths:
@@ -68,8 +61,8 @@ def open_jsonl_randompath(file):
         all_paths = []
         for line in f:
             path = []
-            d = json.loads(line.rstrip('\n'))
-            for rd in d['random_walk']:
+            d = json.loads(line.rstrip("\n"))
+            for rd in d["random_walk"]:
                 path.append(rd[0])
             all_paths.append(path)
     return all_paths
@@ -82,20 +75,21 @@ def compare_paths(all_theory_paths, all_paths):
     theory_path = Counter(tot)
     real_path = Counter(tot2)
 
-    x = theory_path.keys()
-    x2 = real_path.keys()
-
-    df = pd.DataFrame([theory_path, real_path], index=['all paths', 'random walk'])
+    df = pd.DataFrame([theory_path, real_path], index=["all paths", "random walk"])
     df = df.transpose()
 
     total_theory_path = sum(theory_path.values())
     total_real_path = sum(real_path.values())
-    theory_path = {key: (value / total_theory_path) * 100 for key, value in theory_path.items()}
-    real_path = {key: (value / total_real_path) * 100 for key, value in real_path.items()}
-    df2 = pd.DataFrame([theory_path, real_path], index=['all paths', 'random walk'])
+    theory_path = {
+        key: (value / total_theory_path) * 100 for key, value in theory_path.items()
+    }
+    real_path = {
+        key: (value / total_real_path) * 100 for key, value in real_path.items()
+    }
+    df2 = pd.DataFrame([theory_path, real_path], index=["all paths", "random walk"])
 
-    df.plot(kind='bar')
-    df2.plot(kind='bar')
+    df.plot(kind="bar")
+    df2.plot(kind="bar")
     plt.tight_layout()  # to make sure that x-axis labels are always shown fully
     plt.show()
 
@@ -113,14 +107,14 @@ class StatConversations:
                 convs = []
                 nodes_n = []
                 transitions_n = []
-                d = json.loads(line.rstrip('\n'))
-                for rd in d['random_walk']:
+                d = json.loads(line.rstrip("\n"))
+                for rd in d["random_walk"]:
                     path.append(rd)  # to access to Node rd[0] and action rd[1]
                     nodes_n.append(rd[0])
                     transitions_n.append(rd[1])
                 self.nodes.append(nodes_n)
                 self.transitions.append(transitions_n)
-                for conv in d['conversation']:
+                for conv in d["conversation"]:
                     convs.append(conv)
                 self.randomwalk.append(path)
                 self.conversation.append(convs)
@@ -169,11 +163,9 @@ class StatConversations:
         for conv in self.randomwalk:
             goals += 1
             for elem in conv:
-                if "other" in elem[1] :
-                    goals +=1
-        return goals/len(self.randomwalk)
-
-
+                if "other" in elem[1]:
+                    goals += 1
+        return goals / len(self.randomwalk)
 
 
 def print_dict_graphviz(intents_conv):
@@ -190,21 +182,27 @@ def create_theoretical_paths_from(machine):
     adj_bis = create_adj_mat(a, machine)
 
     start_index = 0  # Start
-    stop_index = len(adj_bis)-1 # Stop
+    stop_index = len(adj_bis) - 1  # Stop
     all_theory_paths = find_all_paths(adj_bis, start_index, stop_index)
     print(f"Total number of paths printed : {len(all_theory_paths)}")
 
     all_readable_paths = assign_name_to_path(all_theory_paths, a)
     return all_readable_paths
 
-hotels = StatConversations("generated_conv/HotelMachine_simulated_conversation_2.jsonl", HotelMachine())
-plot_intentperconv = hotels.n_conversation_per_intent()
-print(plot_intentperconv)
-print_dict_graphviz(plot_intentperconv)
-print(hotels.mean_number_of_goals_in_conversations())
-print(hotels.n_conversation_per_intent())
 
-car = StatConversations("generated_conv/RentCarMachine_simulated_conversation.jsonl", RentCarMachine())
-plot_intentperconv_car = car.n_conversation_per_intent()
-print_dict_graphviz(plot_intentperconv_car)
-print(car.mean_number_of_goals_in_conversations())
+if __name__ == "__main__":
+    hotels = StatConversations(
+        "generated_conv/HotelMachine_simulated_conversation_2.jsonl", HotelMachine()
+    )
+    plot_intentperconv = hotels.n_conversation_per_intent()
+    print(plot_intentperconv)
+    print_dict_graphviz(plot_intentperconv)
+    print(hotels.mean_number_of_goals_in_conversations())
+    print(hotels.n_conversation_per_intent())
+
+    car = StatConversations(
+        "generated_conv/RentCarMachine_simulated_conversation.jsonl", RentCarMachine()
+    )
+    plot_intentperconv_car = car.n_conversation_per_intent()
+    print_dict_graphviz(plot_intentperconv_car)
+    print(car.mean_number_of_goals_in_conversations())

@@ -83,7 +83,7 @@ def generate_convs(
             if do_save:
                 # save conversation in a file
                 with open(
-                    f"{initial_machine.__class__.__name__}_simulated_conversation.jsonl",
+                    f"generated_conv/{initial_machine.__class__.__name__}_simulated_conversation.jsonl",
                     "a",
                 ) as f:
                     f.write(
