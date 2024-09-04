@@ -10,7 +10,7 @@ class HotelMachine(StateMachine):
                 "request": "RequestType",
             },
             "InScopeResponse": {
-                "end": "stop",
+                "end": "Stop",
                 "other_booking": "RequestType",
             },
             "RequestType": {
@@ -68,7 +68,8 @@ class HotelMachine(StateMachine):
                 "end": "Stop",
                 "other_request": "InScopeResponse",
                 "other_booking": "RequestType",
-            }
+            },
+            "Stop": {},
         }
 
 

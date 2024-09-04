@@ -50,6 +50,7 @@ class WorkerAgendaMachine(StateMachine):
             "SendingMessageTradesman": {
                 "end": "Stop",
             },
+            "Stop": {},
         }
 
         #TODO : adapt function call
