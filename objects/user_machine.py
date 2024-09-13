@@ -59,7 +59,31 @@ class UserMachine:
 
             walk.append((sm.state, next_transition))
 
-            prompt = [
+            intent_exp_prompt = [
+                (
+                    "system",
+                    (
+                        "You're an agent specialized in dialog systems and graph-based conversation.\n"
+                        f"Here is a state-transition graph of an agent conversation flow: {sm.transitions_graph}."
+                        "Based on this graph, you need to generate a one line explanation of the intent the user will send to you.\n"
+                        "Explain the intent of the transition in a way that a human can understand it, in a consise way."
+                    ),
+                ),
+                ("user", f"Explain the intent of the transition: {next_transition}"),
+            ]
+            intent_explanation = (
+                model()
+                .invoke(
+                    intent_exp_prompt,
+                    temperature=0.2,
+                )
+                .content
+            )
+
+            detected_transition = None
+            user_input = None
+
+            user_prompt = [
                 (
                     "system",
                     (
@@ -78,19 +102,36 @@ class UserMachine:
                 ),
                 (
                     "user",
-                    f'Here is the intent of the user : {next_transition}.\n Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.',
+                    f'{intent_explanation}.\n Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.',
                 ),
             ]
 
-            user_input = (
-                model()
-                .invoke(
-                    prompt,
-                    temperature=0.2,
+            while detected_transition != next_transition:
+                user_input = (
+                    model()
+                    .invoke(
+                        user_prompt,
+                        temperature=0.2,
+                    )
+                    .content
                 )
-                .content
-            )
+                detected_transition = sm.detect_intent(user_input)
+                if detected_transition != next_transition:
+                    user_prompt.append(
+                        (
+                            "assistant",
+                            user_input,
+                        )
+                    )
+                    user_prompt.append(
+                        (
+                            "user",
+                            "Your last sentence was not consistent with the intent of the user. "
+                            + "Please generate a new sentence, based on the intent of the user and the last agent sentence.",
+                        )
+                    )
 
+            # TODO : loop to check answer consistency
             output = sm.get_response(user_input)
             if output["transition"] != next_transition:
                 print(

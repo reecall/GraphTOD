@@ -208,7 +208,7 @@ class StateMachine:
         except KeyError:
             print(self.knowledge)
             raise ValueError(
-                f"No search result in the context knowledge.\nInput text was : {input_text}"
+                f"No search result in the context knowledge.\nInput text was : {input_text}\nState was : {self.state}"
             )
         selection_generation = self.llm().invoke(
             [
