@@ -65,9 +65,8 @@ class StateMachine:
 
     def get_next_transitions(self):
         return list(self.transitions_graph[self.state].keys())
-
-    def get_response(self, input_text: str):
-        # understand what's the transition ; then apply the transition ; then return the response
+    
+    def detect_intent(self, input_text: str):
         transition_prompt = (
             "You're a agent specialized in state transition graph. "
             "You should act as an agent, based on the user input, the current state and the transitions graph. "
@@ -96,6 +95,17 @@ class StateMachine:
                 + "\n"
                 + self.history_to_string()
             )
+        if transition not in self.transitions_graph[self.state]:    
+            raise ValueError(
+                f"Invalid transition. Expected a transition in {self.transitions_graph[self.state]}, got {transition}"
+                + "\n"
+                + self.history_to_string()
+            )
+        return transition
+
+    def get_response(self, input_text: str):
+        # understand what's the transition ; then apply the transition ; then return the response
+        transition = self.detect_intent(input_text)
         if self.DEBUG:
             print(f"Transition: {transition}")
         self.transition(transition, input_text)
@@ -154,7 +164,7 @@ class StateMachine:
                     f"Here is the user input: {input_text}. Generate a response to this.",
                 ),
             ],
-            temperature=0,
+            temperature=0.3,
             response_format={"type": "text"},
         ).content
         self.history.append(("user", input_text))
