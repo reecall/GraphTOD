@@ -84,7 +84,7 @@ class UserMachine:
                 (
                     "user",
                     (
-                        f'The next user sentence must reflect the intent "{next_transition}".\n'
+                        f'The next user sentence must trigger the transition "{next_transition}".\n'
                         f' Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.'
                     ),
                 ),

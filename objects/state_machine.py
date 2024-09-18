@@ -184,7 +184,7 @@ class StateMachine:
             if action in self.function_call and enable_function_call:
                 f_result = self.function_calling(action, input_text)
                 if f_result:
-                    self.knowledge.update(f_result)
+                    self.knowledge.update(f_result) # TODO: check if f_result is not empty
             self.state = self.transitions_graph[self.state][action]
         else:
             raise ValueError(
