@@ -1,6 +1,7 @@
 import random as rd
 
 from objects.state_machine import StateMachine
+from objects.AI_model import AIModel
 
 
 class UserMachine:
@@ -42,7 +43,7 @@ class UserMachine:
             "informations": self.informations,
         }
 
-    def generate_conversation(self, model, graph_description: str, seed: int):
+    def generate_conversation(self, model: AIModel, graph_description: str, seed: int):
         history = []
         rd.seed(seed)
         sm = self.state_machine
@@ -52,13 +53,18 @@ class UserMachine:
                 {"role": "assistant", "text": sm.history[-1][1], "state": sm.state}
             )
 
-            next_transition = rd.choice(sm.get_next_transitions())
+            next_transition = rd.choice(
+                sm.get_next_transitions()
+            )  # TODO verify if it makes sens
             other_transitions = sm.get_next_transitions()
             other_transitions.remove(next_transition)
 
             walk.append((sm.state, next_transition))
 
-            prompt = [
+            detected_transition = None
+            user_input = None
+
+            user_prompt = [
                 (
                     "system",
                     (
@@ -77,14 +83,42 @@ class UserMachine:
                 ),
                 (
                     "user",
-                    f'Here is the intent of the user : {next_transition}.\n Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.',
+                    (
+                        f'The next user sentence must trigger the transition "{next_transition}".\n'
+                        f' Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.'
+                    ),
                 ),
             ]
 
-            user_input = model.invoke(
-                prompt,
-                temperature=0.2,
-            ).content
+            while detected_transition != next_transition:
+                user_input = (
+                    model()
+                    .invoke(
+                        user_prompt,
+                        temperature=0.2,
+                    )
+                    .content
+                )
+                detected_transition = sm.detect_intent(user_input)
+                if detected_transition != next_transition:
+                    print("Detected transition: ", detected_transition)
+                    print("Expected transition: ", next_transition)
+                    print(user_input)
+                    print("Retrying...")
+                    print()
+                    user_prompt.append(
+                        (
+                            "assistant",
+                            user_input,
+                        )
+                    )
+                    user_prompt.append(
+                        (
+                            "user",
+                            "The last sentence you generated was not consistent with the intent. "
+                            + "Please generate a different and better sentence, based on the intent of the user and the last agent sentence.",
+                        )
+                    )
 
             output = sm.get_response(user_input)
             if output["transition"] != next_transition:

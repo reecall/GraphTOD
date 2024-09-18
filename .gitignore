@@ -3,3 +3,4 @@ chroma/*
 .env
 *.json
 .DS_Store
+*hide.jsonl

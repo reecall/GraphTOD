@@ -4,7 +4,7 @@ import pandas as pd
 import random as rd
 import requests
 
-from reellm import get_llm, get_embedding, ModelName
+from objects.AI_model import AIModel, get_ai_model
 
 
 class StateMachine:
@@ -12,21 +12,31 @@ class StateMachine:
         self,
         transitions_graph: dict,
         function_call: dict,
-        datafile: str,
+        datafile: str = None,
         initial_state: str = "InitialState",
         initial_sentence: str = "Hello ! What can I do for you ?",
         api_adress = "http://127.0.0.1:8000",
         DEBUG: bool = False,
     ):
+        # Define string name of prefab functions
+        self.prefab_functions = {
+            "select_i": self.select_i,
+        }
         self.state = initial_state
         self.transitions_graph = transitions_graph
         self.history = [("assistant", initial_sentence)]
+        self.initial_sentence = initial_sentence
         self.path = []
+
         self.function_call = function_call
+        # convert string to function
+        for key, value in self.function_call.items():
+            if value in self.prefab_functions.keys():
+                self.function_call[key] = self.prefab_functions[value]
+
         self.api_adress = api_adress
         self.knowledge = {}
-        self.embedder = get_embedding(ModelName.EMBEDDING_LARGE)
-        self.llm = get_llm(ModelName.GPT_4_O)
+        self.llm: AIModel = get_ai_model()
         self.DEBUG = DEBUG
         self.datafile = datafile
         if self.DEBUG:
@@ -40,43 +50,62 @@ class StateMachine:
             "state": self.state,
             "transitions_graph": self.transitions_graph,
         }
+    
+    def get_config(self) -> dict:
+        return {
+            "transitions_graph": self.transitions_graph,
+            "function_call": self.function_call,
+            "datafile": self.datafile,
+            "initial_sentence": self.history[0][1],
+            "api_adress": self.api_adress,
+        }
 
     def history_to_string(self):
         return "\n".join([f"{role}: {sentence}" for role, sentence in self.history])
 
     def get_next_transitions(self):
         return list(self.transitions_graph[self.state].keys())
-
-    def get_response(self, input_text: str):
-        # understand what's the transition ; then apply the transition ; then return the response
+    
+    def detect_intent(self, input_text: str):
         transition_prompt = (
             "You're a agent specialized in state transition graph. "
-            "You should act as an agent, based on the user input, the current state and the transitions graph. "
-            "You should return the transition that suit the best following the user input as a json. "
+            "You should act as an agent, based on the user input, the current state and the transition graph. "
+            "You should return the transition that suits the best following the user input as a json. "
             "Use elements from your context knowledge for your answer when you think it's relevant. "
             "Here is the information about the history of the conversation:\n"
             f"{self.history_to_string()}\n"
             "Here is all the transitions you can take, based on the current state :\n"
             f"{"\n-".join(self.get_next_transitions())}\n"
-            "Pick one transition listed above following the context of the user input, or return the transition 'none' if you think there is no transition corresponding. "
-            "If you think that's the end of the conversation, return the transition 'stop'. "
+            "Pick the most accurate transition among ones listed above following the intent of the user input, or return the transition 'none' if you think there is no transition corresponding. "
+            "If the user says explicitly that this is the end of the conversation, return the transition 'end'. "
             "Here is what you know in your context knowledge:\n"
             f"{self.knowledge}\n"
             "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
         )
-        transition = self.llm.invoke(
+        transition = self.llm().invoke(
             [("system", transition_prompt), ("user", f"Here is the user input : '{input_text}'")],
             temperature=0,
             response_format={"type": "json_object"},
         ).content.lower()
         try:
             transition = json.loads(transition)["transition"]
-        except KeyError:
+        except (KeyError, ValueError):
             raise ValueError(
                 f"Invalid transition format. Expected a json object with a 'transition' key, got {transition}"
                 + "\n"
                 + self.history_to_string()
             )
+        if transition not in self.get_next_transitions() and transition not in ["none", "end"]:    
+            raise ValueError(
+                f"Invalid transition. Expected a transition in {self.transitions_graph[self.state]}, got {transition}"
+                + "\n"
+                + self.history_to_string()
+            )
+        return transition
+
+    def get_response(self, input_text: str):
+        # understand what's the transition ; then apply the transition ; then return the response
+        transition = self.detect_intent(input_text)
         if self.DEBUG:
             print(f"Transition: {transition}")
         self.transition(transition, input_text)
@@ -93,7 +122,7 @@ class StateMachine:
                 "You need to inspire you from the state name to generate the next sentence. "
                 "Do not forget to be polite and helpful."
             )
-        elif transition == "stop":
+        elif transition == "end":
             next_sentence = (
                 "You're a agent specialized in state transition graph. "
                 "You should act as an agent, based on the user input, the current state and the transitions graph. "
@@ -127,7 +156,7 @@ class StateMachine:
                 "Do not forget to be polite and helpful."
             )
 
-        sentence_to_say = self.llm.invoke(
+        sentence_to_say = self.llm().invoke(
             [
                 ("system", next_sentence),
                 (
@@ -135,7 +164,7 @@ class StateMachine:
                     f"Here is the user input: {input_text}. Generate a response to this.",
                 ),
             ],
-            temperature=0,
+            temperature=0.3,
             response_format={"type": "text"},
         ).content
         self.history.append(("user", input_text))
@@ -146,7 +175,7 @@ class StateMachine:
         self, action: str, input_text: str = None, enable_function_call: bool = True
     ):
         self.path.append((self.state, action))
-        if action == "stop":
+        if action == "end":
             self.state = "Stop"
             return
         if action == "none":
@@ -155,7 +184,7 @@ class StateMachine:
             if action in self.function_call and enable_function_call:
                 f_result = self.function_calling(action, input_text)
                 if f_result:
-                    self.knowledge.update(f_result)
+                    self.knowledge.update(f_result) # TODO: check if f_result is not empty
             self.state = self.transitions_graph[self.state][action]
         else:
             raise ValueError(
@@ -179,9 +208,9 @@ class StateMachine:
         except KeyError:
             print(self.knowledge)
             raise ValueError(
-                f"No search result in the context knowledge.\nInput text was : {input_text}"
+                f"No search result in the context knowledge.\nInput text was : {input_text}\nState was : {self.state}"
             )
-        selection_generation = self.llm.invoke(
+        selection_generation = self.llm().invoke(
             [
                 (
                     "user",
@@ -214,9 +243,11 @@ class StateMachine:
             )
         if self.DEBUG:
             print(f"Selected element: {selected_element}")
-        # open recipes
+        if not self.datafile:
+            return {"selected_element": selected_element}
+        # open datafile
         recipes = pd.read_json(self.datafile, lines=True)
-        # Get the recipe where title = selected_recipe
+        # Get the data where title = selected_element
         recipe_json = recipes[recipes["title"] == selected_element].to_json(
             orient="records"
         )

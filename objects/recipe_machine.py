@@ -6,44 +6,42 @@ class RecipeMachine(StateMachine):
         initial_sentence = "Hello ! What do you want to cook today ?"
         transitions_graph = {
             "InitialState": {
-                "search_recipe": "ShownResults",
-                "pick_random_recipe": "ShownResults",
+                "ask_named_recipe": "ShowRecipiesResults",
+                "ask_random_recipe": "ShowRecipiesResults",
             },
-            "ShownResults": {
-                "explain_a_dish": "ShownResults",
-                "repeat_recipes_options": "ShownResults",
+            "ShowRecipiesResults": {
+                "ask_to_repeat_results": "ShowRecipiesResults",
                 "select_a_recipe": "PresentRecipeDetails",
-                "more_recipe_results": "ShownResults",
+                "ask_more_recipe_results": "ShowRecipiesResults",
             },
             "PresentRecipeDetails": {
                 "start_cooking": "StartedTask",
                 "get_ingredients_of_recipe": "ShowIngredientsAndQuantities",
             },
             "ShowIngredientsAndQuantities": {
-                "start_cooking": "started_task",
+                "start_cooking": "StartedTask",
             },
             "StartedTask": {
-                "question_about_recipe": "RecipeQuestionResponse",
-                "continue_recipe": "ShowStep",
+                "ask_question_about_recipe": "RecipeQuestionResponse",
+                "ask_next_step": "ShowStep",
             },
             "ShowStep": {
-                "question_about_recipe": "RecipeQuestionResponse",
-                "continue_recipe": "ShowStep",
-                "end_recipe": "Stop",
+                "ask_question_about_recipe": "RecipeQuestionResponse",
+                "ask_next_step": "ShowStep",
+                "end": "Stop",
             },
             "RecipeQuestionResponse": {
-                "question_about_recipe": "RecipeQuestionResponse",
-                "continue_recipe": "ShowStep",
-                "end_recipe": "Stop",
+                "ask_question_about_recipe": "RecipeQuestionResponse",
+                "ask_next_step": "ShowStep",
+                "end": "Stop",
             },
-            "Stop": {},
         }
 
         function_call = {
-            "search_recipe": "/recipe/search",
-            "pick_random_recipe": "/recipe/suggest",
+            "ask_named_recipe": "/recipe/search",
+            "ask_random_recipe": "/recipe/suggest",
             "select_a_recipe": self.select_i,
-            "more_results": "/recipe/more_results",
+            "ask_more_recipe_results": "/recipe/more_results",
         }
         super().__init__(
             transitions_graph=transitions_graph,
