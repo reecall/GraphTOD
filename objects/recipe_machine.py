@@ -6,11 +6,10 @@ class RecipeMachine(StateMachine):
         initial_sentence = "Hello ! What do you want to cook today ?"
         transitions_graph = {
             "InitialState": {
-                "ask_to_search_recipe": "ShowRecipiesResults",
-                "pick_random_recipe": "ShowRecipiesResults",
+                "ask_named_recipe": "ShowRecipiesResults",
+                "ask_random_recipe": "ShowRecipiesResults",
             },
             "ShowRecipiesResults": {
-                "ask_details_on_a_dish": "ShowRecipiesResults",
                 "ask_to_repeat_results": "ShowRecipiesResults",
                 "select_a_recipe": "PresentRecipeDetails",
                 "ask_more_recipe_results": "ShowRecipiesResults",
@@ -39,8 +38,8 @@ class RecipeMachine(StateMachine):
         }
 
         function_call = {
-            "ask_to_search_recipe": "/recipe/search",
-            "pick_random_recipe": "/recipe/suggest",
+            "ask_named_recipe": "/recipe/search",
+            "ask_random_recipe": "/recipe/suggest",
             "select_a_recipe": self.select_i,
             "ask_more_recipe_results": "/recipe/more_results",
         }

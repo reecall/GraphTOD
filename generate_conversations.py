@@ -15,7 +15,6 @@ from objects import (
 from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
 from dotenv import load_dotenv
-from copy import copy
 
 load_dotenv(override=True)
 
@@ -40,7 +39,7 @@ def generate_convs(
     all_generated_conversations = []
     for _ in tqdm(range(loop), desc="Generating conversations ...", total=loop):
         # Copy the reference state machine
-        sm = copy(initial_machine)
+        sm = initial_machine.__class__(DEBUG=use_debug)
         # Generate with an LLM between 2 and 6 person caracteristics
         preferences = (
             get_ai_model()()
@@ -53,7 +52,7 @@ def generate_convs(
         )
         preferences = json.loads(preferences)["preferences"]
         # pick 4 random preferences
-        preferences = rd.sample(preferences, 4)
+        preferences = rd.sample(preferences, 3)
 
         gender = rd.choice(["male", "female"])
         name = (
@@ -93,7 +92,7 @@ def generate_convs(
                         )
                         + "\n"
                     )
-        except ValueError as e:
+        except Exception as e:
             print(f"ValueError: {e}")
 
     return all_generated_conversations

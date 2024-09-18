@@ -3,7 +3,7 @@ from .state_machine import StateMachine
 
 class HotelMachine(StateMachine):
     def __init__(self, DEBUG=False):
-        initial_sentence = "Hello, what can I do for you ?" # do you need help find a hotel or deal with a previous booking ?"
+        initial_sentence = "Hello, what can I do for you ?"  # do you need help find a hotel or deal with a previous booking ?"
 
         transitions_graph = {
             "InitialState": {
@@ -72,8 +72,6 @@ class HotelMachine(StateMachine):
             "Stop": {},
         }
 
-
-        #TODO : adapt function call
         function_call = {
             "select_hotel": self.select_i,
             "search_hotel": "/hotel/search",

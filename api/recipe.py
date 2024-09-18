@@ -32,7 +32,7 @@ def search_recipe(req: SeachRecipe):
                     ("user", req.input_text),
                 ],
                 temperature=0,
-                max_tokens=6,
+                max_tokens=20,
             )
             .content
         )
@@ -44,9 +44,14 @@ def search_recipe(req: SeachRecipe):
     client = chromadb.PersistentClient(path="../chroma")
     recipe_collection = client.get_collection("recipe")
     embedder = SentenceTransformer("all-mpnet-base-v2")
-    result = recipe_collection.query(
-        embedder.encode(recipe_name).tolist(), n_results=req.n_items
-    )
+    try:
+        result = recipe_collection.query(
+            embedder.encode(recipe_name).tolist(), n_results=req.n_items
+        )
+    except TypeError as e:
+        print(recipe_name)
+        print(e)
+        return
     # print finded recipes
     print(result["documents"][0])
     return {"search_result": result["documents"][0]}
@@ -59,7 +64,7 @@ class SuggestRecipe(BaseModel):
 
 
 @recipe_router.post("/suggest")
-def suggest_recipe(req: SeachRecipe):
+def suggest_recipe(req: SuggestRecipe):
     recipes = pd.read_json("data/corpus_recipe.jsonl", lines=True)
     # pick n_items random recipes
     result = recipes.sample(req.n_items)
@@ -84,6 +89,9 @@ def more_results(req: MoreResults):
             n_items=len(req.knowledge["search_result"]) + 2,
         )["search_result"]
     else:
-        new_recipes = suggest_recipe(None, n_items=2)["search_result"]
+        suggest_req = SuggestRecipe(
+            input_text=req.input_text, knowledge=req.knowledge, n_items=2
+        )
+        new_recipes = suggest_recipe(suggest_req)["search_result"]
     found_recipes = req.knowledge["search_result"]
     return {"search_result": found_recipes + new_recipes}

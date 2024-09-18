@@ -69,15 +69,15 @@ class StateMachine:
     def detect_intent(self, input_text: str):
         transition_prompt = (
             "You're a agent specialized in state transition graph. "
-            "You should act as an agent, based on the user input, the current state and the transitions graph. "
-            "You should return the transition that suit the best following the user input as a json. "
+            "You should act as an agent, based on the user input, the current state and the transition graph. "
+            "You should return the transition that suits the best following the user input as a json. "
             "Use elements from your context knowledge for your answer when you think it's relevant. "
             "Here is the information about the history of the conversation:\n"
             f"{self.history_to_string()}\n"
             "Here is all the transitions you can take, based on the current state :\n"
             f"{"\n-".join(self.get_next_transitions())}\n"
-            "Pick one transition listed above following the context of the user input, or return the transition 'none' if you think there is no transition corresponding. "
-            "If you think that's the end of the conversation, return the transition 'end'. "
+            "Pick the most accurate transition among ones listed above following the intent of the user input, or return the transition 'none' if you think there is no transition corresponding. "
+            "If the user says explicitly that this is the end of the conversation, return the transition 'end'. "
             "Here is what you know in your context knowledge:\n"
             f"{self.knowledge}\n"
             "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
@@ -89,13 +89,13 @@ class StateMachine:
         ).content.lower()
         try:
             transition = json.loads(transition)["transition"]
-        except KeyError:
+        except (KeyError, ValueError):
             raise ValueError(
                 f"Invalid transition format. Expected a json object with a 'transition' key, got {transition}"
                 + "\n"
                 + self.history_to_string()
             )
-        if transition not in self.transitions_graph[self.state]:    
+        if transition not in self.get_next_transitions() and transition not in ["none", "end"]:    
             raise ValueError(
                 f"Invalid transition. Expected a transition in {self.transitions_graph[self.state]}, got {transition}"
                 + "\n"

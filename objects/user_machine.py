@@ -53,32 +53,13 @@ class UserMachine:
                 {"role": "assistant", "text": sm.history[-1][1], "state": sm.state}
             )
 
-            next_transition = rd.choice(sm.get_next_transitions())
+            next_transition = rd.choice(
+                sm.get_next_transitions()
+            )  # TODO verify if it makes sens
             other_transitions = sm.get_next_transitions()
             other_transitions.remove(next_transition)
 
             walk.append((sm.state, next_transition))
-
-            intent_exp_prompt = [
-                (
-                    "system",
-                    (
-                        "You're an agent specialized in dialog systems and graph-based conversation.\n"
-                        f"Here is a state-transition graph of an agent conversation flow: {sm.transitions_graph}."
-                        "Based on this graph, you need to generate a one line explanation of the intent the user will send to you.\n"
-                        "Explain the intent of the transition in a way that a human can understand it, in a consise way."
-                    ),
-                ),
-                ("user", f"Explain the intent of the transition: {next_transition}"),
-            ]
-            intent_explanation = (
-                model()
-                .invoke(
-                    intent_exp_prompt,
-                    temperature=0.2,
-                )
-                .content
-            )
 
             detected_transition = None
             user_input = None
@@ -102,7 +83,10 @@ class UserMachine:
                 ),
                 (
                     "user",
-                    f'{intent_explanation}.\n Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.',
+                    (
+                        f'The next user sentence must reflect the intent "{next_transition}".\n'
+                        f' Based on this, generate a response to "{sm.history[-1][1]}", which is the agent\'s last sentence, reflecting the intent of the user.'
+                    ),
                 ),
             ]
 
@@ -117,6 +101,11 @@ class UserMachine:
                 )
                 detected_transition = sm.detect_intent(user_input)
                 if detected_transition != next_transition:
+                    print("Detected transition: ", detected_transition)
+                    print("Expected transition: ", next_transition)
+                    print(user_input)
+                    print("Retrying...")
+                    print()
                     user_prompt.append(
                         (
                             "assistant",
@@ -126,12 +115,11 @@ class UserMachine:
                     user_prompt.append(
                         (
                             "user",
-                            "Your last sentence was not consistent with the intent of the user. "
-                            + "Please generate a new sentence, based on the intent of the user and the last agent sentence.",
+                            "The last sentence you generated was not consistent with the intent. "
+                            + "Please generate a different and better sentence, based on the intent of the user and the last agent sentence.",
                         )
                     )
 
-            # TODO : loop to check answer consistency
             output = sm.get_response(user_input)
             if output["transition"] != next_transition:
                 print(
