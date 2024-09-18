@@ -18,17 +18,21 @@ class SearchHotel(BaseModel):
 def search_hotels(req: SearchHotel):
     model = get_ai_model()
     # Search cars models according to the user input
-    hotel_name = model.invoke(
-        [
-            (
-                "user",
-                f"You role is to return {req.n_items} hotels that match the user input. Be creative about the hotels and what type of accomodation they provide, and return a JSON formatted as {{'search_result': ['hotel1', 'hotel2', 'hotel3']}}",
-            ),
-            ("user", f"Here is the user input : {req.input_text}"),
-        ],
-        temperature=0,
-        response_format={"type": "json_object"},
-    ).content
+    hotel_name = (
+        model()
+        .invoke(
+            [
+                (
+                    "user",
+                    f"You role is to return {req.n_items} hotels that match the user input. Be creative about the hotels and what type of accomodation they provide, and return a JSON formatted as {{'search_result': ['hotel1', 'hotel2', 'hotel3']}}",
+                ),
+                ("user", f"Here is the user input : {req.input_text}"),
+            ],
+            temperature=0,
+            response_format={"type": "json_object"},
+        )
+        .content
+    )
 
     recipe_name = json.loads(hotel_name)
 
