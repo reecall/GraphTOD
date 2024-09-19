@@ -4,14 +4,9 @@ from .state_machine import StateMachine
 class WorkerAgendaMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello, welcome to the construction worker agenda ! How can I help you ? I'm here for you to find a tradesman for your project."
-        #For example build a house, repair your toilet leak, install new windows, etc. Do you want to start a new quote, or do you have an existing quote or invoice ?"
-        #me rajoute des fausses transitions pour avec "start_a_new_quote" par ex,
 
         transitions_graph = {
             "InitialState": {
-                "request": "RequestTypeWork",
-            },
-            "RequestTypeWork": {
                 "new_quote_building_trade": "RequestDetailsForTradesman",
                 "existing_quote_building_trade": "RequestQuoteNumber",
                 "existing_invoice_building_trade": "RequestInvoiceNumber",
@@ -53,11 +48,10 @@ class WorkerAgendaMachine(StateMachine):
             "Stop": {},
         }
 
-        #TODO : adapt function call
         function_call = {
             "add_to_quote": "/worker/add",
             "EvaluateQuotePossibilityWithTradesman": "/worker/yesno",
-            "SearchAPIInvoices" : "/worker/yesno",
+            "SearchAPIInvoices": "/worker/yesno",
         }
 
         super().__init__(

@@ -5,13 +5,10 @@ class RentCarMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello, welcome to Rent A Car ! How can I help you ?"
 
-
-        transitions_graph_maya = {
+        transitions_graph = {
             "InitialState": {
                 "ask_question": "ResponseFAQ",
-                "pick_up_vehicle": "AskLicensePlateNumber",
-                "cancel_reservation": "AskLicensePlateNumber",
-                "extend_reservation": "AskLicensePlateNumber",
+                "has_a_reservation": "AskLicensePlateNumber",
                 "make_a_reservation": "AskDateAndTime",
             },
             "ResponseFAQ": {
@@ -19,29 +16,32 @@ class RentCarMachine(StateMachine):
                 "other_request": "InitialState",
             },
             "AskLicensePlateNumber": {
-                "give_license_plate": "CollectLicensePlateNumber",
+                "check_license_plate_number": "AskPickupCancelExtend",
             },
-            "CollectLicensePlateNumber": {
-                "pick_up_vehicle": "InfoViaAPI",
-                "cancel_reservation": "Cancellation",
-                "extend_reservation": "AskDateAndTime",
+            "AskPickupCancelExtend": {
+                "pick_up_vehicle": "ShowPickUpInfos",
+                "cancel_reservation": "CancellationSucces",
+                "extend_reservation": "AskExtendDuration",
             },
-            "InfoViaAPI": {
+            "AskExtendDuration": {
+                "check_extend_possiblity": "ValidateReservation",  # TODO : check if possible yes/no
+            },
+            "ShowPickUpInfos": {
                 "end": "stop",
             },
-            "Cancellation": {
+            "CancellationSucces": {
                 "end": "stop",
                 "make_a_reservation": "AskDateAndTime",
             },
             "AskDateAndTime": {
-                "provide_date": "ResponseAccordingToAPIDispo",
+                "check_dates_availability": "ShowAvailableDates",
             },
-            "ResponseAccordingToAPIDispo": {
+            "ShowAvailableDates": {
                 "select_date": "ValidateReservation",
-                "see_vehicles": "VehiclesAvailableAccordingToAPIDispo",
+                "see_vehicles": "ShowAvailableVehicles",
             },
-            "VehiclesAvailableAccordingToAPIDispo": {
-                "provide_date": "ResponseAccordingToAPIDispo",
+            "ShowAvailableVehicles": {
+                "check_dates_availability": "ShowAvailableDates",
                 "select_vehicle": "ValidateReservation",
                 "ask_more_info": "MoreInfo",
             },
@@ -49,65 +49,22 @@ class RentCarMachine(StateMachine):
                 "end": "stop",
             },
             "MoreInfo": {
-                "return_vehicle_disponibilities": "VehiclesAvailableAccordingToAPIDispo",
+                "return_vehicle_disponibilities": "ShowAvailableDates",
             },
-            "stop": {}
-        }
-
-        function_call_maya = {
-            "select_vehicle": self.select_i,
-            "select_date": self.select_i,
-            "see_vehicles": "/car/search",
-            "provide_date": "/car/date",
-        }
-
-        transitions_graph = {
-            "InitialState": {
-                "make_a_reservation": "AskLicensePlateNumber",
-                "edit_a_reservation": "AskDateAndTime",
-            },
-            "AskLicensePlateNumber": {
-                "give_license_plate": "CollectLicensePlateNumber",
-            },
-            "CollectLicensePlateNumber": {
-                "pick_up_vehicule": "PickUpInfo",
-                "cancel_reservation": "Cancellation",
-                "extend_reservation": "AskDateAndTime",
-            },
-            "PickUpInfo": {
-                "other_request": "InitialState",
-                "end": "Stop",
-            },
-            "Cancellation": {
-                "end": "Stop",
-                "make_a_reservation": "AskDateAndTime",
-            },
-            "AskDateAndTime": {
-                "check_date_available": "AskVehiculeType",
-            },
-            "AskVehiculeType": {
-                "see_vehicules": "VehiculesAvailables",
-            },
-            "VehiculesAvailables": {
-                "select_vehicule": "AskNameToValidateReservation",
-            },
-            "AskNameToValidateReservation": {
-                "process_reservation": "SummaryReservation",
-            },
-            "SummaryReservation": {
-                "end": "Stop",
-            },
+            "stop": {},
         }
 
         function_call = {
-            "select_vehicule": self.select_i,
-            "see_vehicules": "/car/search",
+            "select_vehicle": self.select_i,
+            "select_date": self.select_i,
+            "see_vehicles": "/car/search",
+            "check_dates_availability": "/car/date",
         }
 
         super().__init__(
-            transitions_graph=transitions_graph_maya,
+            transitions_graph=transitions_graph,
             initial_sentence=initial_sentence,
-            function_call=function_call_maya,
+            function_call=function_call,
             datafile="data/corpus_recipe.jsonl",
             DEBUG=DEBUG,
         )

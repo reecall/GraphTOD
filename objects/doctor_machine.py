@@ -10,9 +10,9 @@ class DoctorMachine(StateMachine):
                 "edit_doctor_appointment": "AskPatientName",
             },
             "AskPatientName": {
-                "identify_appointment": "ConfirmAppointmentFound",
+                "identify_appointment": "AskSelectCancelRemindReschedule",
             },
-            "ConfirmAppointmentFound": {
+            "AskSelectCancelRemindReschedule": {
                 "cancel_appointment": "AppointmentCancellation",
                 "reminder_appointment": "AppointmentReminder",
                 "reschedule_appointment": "ShowAvailableSlots",
@@ -27,14 +27,13 @@ class DoctorMachine(StateMachine):
                 "save_patient_info": "AskDoctorName",
             },
             "AskDoctorName": {
-                "search_doctor_in_list": "ShowDoctorList",
+                "search_doctors_in_list": "ShowDoctorsList",
             },
-            "ShowDoctorList": {
+            "ShowDoctorsList": {
                 "select_doctor": "ShowAvailableSlots",
             },
             "ShowAvailableSlots": {
-                "select_dates": "AppointmentBooked",
-                "other_doctor": "ShowDoctorList",
+                "select_dates": "AppointmentBooked",  # TODO check date not available
             },
             "AppointmentBooked": {
                 "end": "Stop",
@@ -42,7 +41,7 @@ class DoctorMachine(StateMachine):
         }
 
         function_call = {
-            "search_doctor_in_list": "/doctor/search",
+            "search_doctors_in_list": "/doctor/search",
             "select_doctor": self.select_i,
         }
 
