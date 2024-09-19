@@ -7,23 +7,21 @@ class WorkerAgendaMachine(StateMachine):
 
         transitions_graph = {
             "InitialState": {
-                "new_quote_building_trade": "RequestDetailsForTradesman",
-                "existing_quote_building_trade": "RequestQuoteNumber",
-                "existing_invoice_building_trade": "RequestInvoiceNumber",
+                "new_project_quote": "RequestDetailsForTradesman",  # building trade à p-e garder
+                "existing_project_quote": "RequestQuoteNumber",
+                "existing_project_invoice": "RequestInvoiceNumber",
             },
             "RequestDetailsForTradesman": {
                 "provide_info_for_quote_tradesman": "EvaluateQuotePossibilityWithTradesman",
             },
-            "EvaluateQuotePossibilityWithTradesman": {
+            "EvaluateQuotePossibilityWithTradesman": {  # TODO change logic ye/no
                 "wait_for_quote_un": "ValidateQuoteTradesman",
                 "wait_for_quote_deux": "OtherRequest",
             },
-            "OtherRequest": {
-                "other_request": "RequestTypeWork",
+            "OtherRequest": {  # TODO : add other possibility
                 "end": "Stop",
             },
             "ValidateQuoteTradesman": {
-                "other_request": "RequestTypeWork",
                 "end": "Stop",
             },
             "RequestQuoteNumber": {
@@ -33,14 +31,13 @@ class WorkerAgendaMachine(StateMachine):
                 "add_to_quote": "EvaluateQuotePossibilityWithTradesman",
             },
             "RequestInvoiceNumber": {
-                "provide_info": "SearchAPIInvoices",
+                "provide_info": "SearchForInvoice",
             },
-            "SearchAPIInvoices": {
+            "SearchForInvoice": {
                 "give_problem_detail": "Answer_problem",
             },
             "Answer_problem": {
                 "send_message_to_tradesman": "SendingMessageTradesman",
-                "other_request": "RequestTypeWork",
             },
             "SendingMessageTradesman": {
                 "end": "Stop",
@@ -50,8 +47,8 @@ class WorkerAgendaMachine(StateMachine):
 
         function_call = {
             "add_to_quote": "/worker/add",
-            "EvaluateQuotePossibilityWithTradesman": "/worker/yesno",
-            "SearchAPIInvoices": "/worker/yesno",
+            "provide_info_for_quote_tradesman": "/worker/yesno",
+            "provide_info": "/worker/yesno",
         }
 
         super().__init__(
