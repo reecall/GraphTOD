@@ -14,11 +14,11 @@ class WorkerAgendaMachine(StateMachine):
             "RequestDetailsForTradesman": {
                 "provide_info_for_quote_tradesman": "EvaluateQuotePossibilityWithTradesman",
             },
-            "EvaluateQuotePossibilityWithTradesman": {  # TODO change logic ye/no
+            "EvaluateQuotePossibilityWithTradesman": {
                 "wait_for_quote_un": "ValidateQuoteTradesman",
-                "wait_for_quote_deux": "OtherRequest",
+                "ask_for_detailed_reason": "ExplainReason",
             },
-            "OtherRequest": {  # TODO : add other possibility
+            "ExplainReason": {
                 "end": "Stop",
             },
             "ValidateQuoteTradesman": {

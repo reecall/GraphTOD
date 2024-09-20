@@ -20,16 +20,16 @@ class RentCarMachine(StateMachine):
             },
             "AskPickupCancelExtend": {
                 "pick_up_vehicle": "ShowPickUpInfos",
-                "cancel_reservation": "CancellationSucces",
+                "cancel_reservation": "CancellationSuccess",
                 "extend_reservation": "AskExtendDuration",
             },
             "AskExtendDuration": {
-                "check_extend_possiblity": "ValidateReservation",  # TODO : check if possible yes/no
+                "check_extend_possibility": "ValidateReservation",
             },
             "ShowPickUpInfos": {
                 "end": "stop",
             },
-            "CancellationSucces": {
+            "CancellationSuccess": {
                 "end": "stop",
                 "make_a_reservation": "AskDateAndTime",
             },
