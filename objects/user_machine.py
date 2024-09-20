@@ -16,9 +16,9 @@ class UserMachine:
 
     def __init__(
         self,
-        name: str,
-        age: int,
-        gender: str,
+        name: str = "",
+        age: int = "",
+        gender: str = "",
         informations: dict = [],
         state_machine: StateMachine = None,
     ):
