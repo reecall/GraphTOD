@@ -8,7 +8,7 @@ class HotelMachine(StateMachine):
         transitions_graph = {
             "InitialState": {
                 "search_hotels": "DisplayHotels",
-                "cancel_or_modify_reservation": "BookingFound",
+                "ask_cancelling_or_modifying_reservation": "BookingFound",
             },
             "DisplayHotels": {
                 "ask_for_more_hotels": "DisplayHotels",

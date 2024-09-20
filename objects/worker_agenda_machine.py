@@ -15,7 +15,7 @@ class WorkerAgendaMachine(StateMachine):
                 "provide_info_for_quote_tradesman": "EvaluateQuotePossibilityWithTradesman",
             },
             "EvaluateQuotePossibilityWithTradesman": {
-                "wait_for_quote_un": "ValidateQuoteTradesman",
+                "wait_for_quote": "ValidateQuoteTradesman",
                 "ask_for_detailed_reason": "ExplainReason",
             },
             "ExplainReason": {

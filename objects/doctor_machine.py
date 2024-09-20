@@ -33,7 +33,7 @@ class DoctorMachine(StateMachine):
                 "select_doctor": "ShowAvailableSlots",
             },
             "ShowAvailableSlots": {
-                "select_dates": "AppointmentBooked",  # TODO check date not available
+                "select_dates": "AppointmentBooked",
             },
             "AppointmentBooked": {
                 "end": "Stop",
