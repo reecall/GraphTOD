@@ -33,8 +33,8 @@ class HotelMachine(StateMachine):
                 "end": "Stop",
             },
             "BookingFound": {
-                "criteria_to_modify": "ModificationPossible",  # TODO : possible or not to modify
-                "refund": "CheckRefund",
+                "criteria_to_modify": "ModificationPossible",
+                "refund": "AnswerForRefund",
             },
             "ModificationPossible": {
                 "add_criteria": "OtherCriteriaAdded",
@@ -42,18 +42,15 @@ class HotelMachine(StateMachine):
             "OtherCriteriaAdded": {
                 "end": "Stop",
             },
-            "CheckRefund": {
-                "wait_refund_one": "RefundDone",  # TODO : yes / no for the refund
-                "wait_refund_two": "RefundImpossible",
+            "AnswerForRefund": {
+                "contest_refund_decision": "DetailsRefundDecision",
+                "accept_decision": "Stop",
             },
-            "RefundDone": {
-                "end": "Stop",
+            "DetailsRefundDecision": {
+                "ask_for_another_compensation": "AlternativeCompensation",
+                "accept_decision": "Stop",
             },
-            "RefundImpossible": {
-                "ask_for_compensation": "SuggestCompensation",
-                "end": "Stop",
-            },
-            "SuggestCompensation": {
+            "AlternativeCompensation": {
                 "user_accepts": "CompensationAccepted",
                 "user_refuses": "CompensationRefused",
             },
@@ -61,14 +58,17 @@ class HotelMachine(StateMachine):
                 "end": "Stop",
             },
             "CompensationRefused": {
+                "negociate_compensation": "AlternativeCompensation",
                 "end": "Stop",
             },
+            "Stop": {},
         }
 
         function_call = {
             "select_hotel": self.select_i,
             "search_hotels": "/hotel/search",
             "ask_for_more_hotels": "/hotel/search",
+            # "refund" : "/hotel/refund", #TODO add in API
         }
 
         super().__init__(
