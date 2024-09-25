@@ -1,4 +1,5 @@
 import random as rd
+import json
 
 from objects.state_machine import StateMachine
 from objects.AI_model import AIModel
@@ -53,11 +54,59 @@ class UserMachine:
                 {"role": "assistant", "text": sm.history[-1][1], "state": sm.state}
             )
 
-            next_transition = rd.choice(
-                sm.get_next_transitions()
-            )  # TODO verify if it makes sens
-            other_transitions = sm.get_next_transitions()
-            other_transitions.remove(next_transition)
+            possible_transitions = sm.get_next_transitions()
+
+            # pop a random transition from the list of possible transitions
+            next_transition = possible_transitions.pop(
+                rd.randint(0, len(possible_transitions) - 1)
+            )
+
+            def validate_next_transition(next_transition):
+                # check with an LLM if the transition makes sens following the dialog history
+                # if not, pop another transition
+                makes_sense_output = json.loads(
+                    (
+                        model()
+                        .invoke(
+                            [
+                                (
+                                    "system",
+                                    (
+                                        "Your role is to check if the transition makes sense, based on the conversation history. A transition makes sens if it is coherent with the conversation flow, and can be the next user input. "
+                                        f"Your goal is to return a boolean, True if the transition makes sense, False otherwise. For contexte, here is the history of the conversation :\n{sm.history_to_string()}.\n"
+                                        f"You should return a json like : {{'reasoning': 'To check if the transition makes sens ...', 'makes_sense': True}}."
+                                    ),
+                                ),
+                                (
+                                    "user",
+                                    f'Following the history of the conversation, does the transition "{next_transition}" make sense ?',
+                                ),
+                            ],
+                            temperature=0,
+                            response_format={"type": "json_object"},
+                        )
+                        .content
+                    )
+                )
+                return (
+                    makes_sense_output["makes_sense"],
+                    makes_sense_output["reasoning"],
+                )
+
+            is_transition_valid, reasoning = validate_next_transition(next_transition)
+            while not is_transition_valid:
+                if len(possible_transitions) == 0:
+                    print("No possible transition left.")
+                    break
+                print("The transition is not valid.")
+                print(reasoning)
+                print("Retrying...")
+                next_transition = possible_transitions.pop(
+                    rd.randint(0, len(possible_transitions) - 1)
+                )
+                is_transition_valid, reasoning = validate_next_transition(
+                    next_transition
+                )
 
             walk.append((sm.state, next_transition))
 
