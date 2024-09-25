@@ -18,7 +18,7 @@ class SearchHotel(BaseModel):
 def search_hotels(req: SearchHotel):
     model = get_ai_model()
     # Search cars models according to the user input
-    hotel_name = (
+    hotel_names = (
         model()
         .invoke(
             [
@@ -34,8 +34,12 @@ def search_hotels(req: SearchHotel):
         .content
     )
 
-    recipe_name = json.loads(hotel_name)
+    hotel_names = json.loads(hotel_names)
 
-    print(recipe_name)
-
-    return {"search_result": recipe_name["search_result"]}
+    print(hotel_names)
+    if "search_result" in req.knowledge:
+        return {
+            "search_result": req.knowledge["search_result"]
+            + hotel_names["search_result"]
+        }
+    return {"search_result": hotel_names["search_result"]}

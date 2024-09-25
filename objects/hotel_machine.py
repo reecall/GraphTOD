@@ -7,75 +7,68 @@ class HotelMachine(StateMachine):
 
         transitions_graph = {
             "InitialState": {
-                "request": "RequestType",
-            },
-            "InScopeResponse": {
-                "end": "Stop",
-                "other_booking": "RequestType",
-            },
-            "RequestType": {
-                "search_hotel": "DisplayHotels",
-                "cancel_or_modify_reservation": "BookingFound",
+                "search_hotels": "DisplayHotels",
+                "ask_cancelling_or_modifying_reservation": "BookingFound",
             },
             "DisplayHotels": {
-                "ask_for_more_hotel": "DisplayHotels",
-                "select_hotel": "BookHotel",
+                "ask_for_more_hotels": "DisplayHotels",
+                "select_hotel": "AskPaymentInfo",
                 "ask_for_details": "DisplayHotelDetails",
             },
             "DisplayHotelDetails": {
-                "select_hotel": "BookHotel",
+                "select_hotel": "AskPaymentInfo",
                 "ask_for_more_hotel": "DisplayHotels",
             },
-            "BookHotel": {
-                "ask_payment_type": "PaymentProcess",
+            "AskPaymentInfo": {
+                "check_payment_type": "AskPaymentConfirmation",
             },
-            "PaymentProcess": {
-                "pay": "PaymentAccepted",
+            "AskPaymentConfirmation": {
+                "process_payment": "PaymentAccepted",
             },
             "PaymentAccepted": {
                 "request_invoice": "SendInvoice",
                 "end": "Stop",
-                "other_request": "InScopeResponse",
-                "other_booking": "RequestType",
             },
             "SendInvoice": {
                 "end": "Stop",
-                "other_request": "InScopeResponse",
-                "other_booking": "RequestType",
             },
             "BookingFound": {
                 "criteria_to_modify": "ModificationPossible",
-                "refund": "CheckRefund",
+                "refund": "AnswerForRefund",
             },
             "ModificationPossible": {
                 "add_criteria": "OtherCriteriaAdded",
             },
             "OtherCriteriaAdded": {
                 "end": "Stop",
-                "other_request": "InScopeResponse",
-                "other_booking": "RequestType",
             },
-            "CheckRefund": {
-                "wait_refund_un": "Refund",
-                "wait_refund_deux": "RefundImpossible",
+            "AnswerForRefund": {
+                "contest_refund_decision": "DetailsRefundDecision",
+                "accept_decision": "Stop",
             },
-            "Refund": {
-                "other_request": "InScopeResponse",
-                "other_booking": "RequestType",
+            "DetailsRefundDecision": {
+                "ask_for_another_compensation": "AlternativeCompensation",
+                "accept_decision": "Stop",
+            },
+            "AlternativeCompensation": {
+                "user_accepts": "CompensationAccepted",
+                "user_refuses": "CompensationRefused",
+            },
+            "CompensationAccepted": {
                 "end": "Stop",
             },
-            "RefundImpossible": {
+            "CompensationRefused": {
+                "negociate_compensation": "AlternativeCompensation",
                 "end": "Stop",
-                "other_request": "InScopeResponse",
-                "other_booking": "RequestType",
             },
             "Stop": {},
         }
 
         function_call = {
             "select_hotel": self.select_i,
-            "search_hotel": "/hotel/search",
-            "ask_for_more_hotel": "/hotel/search",
+            "search_hotels": "/hotel/search",
+            "ask_for_more_hotels": "/hotel/search",
+            # "refund" : "/hotel/refund", #TODO add in API
         }
 
         super().__init__(

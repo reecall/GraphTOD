@@ -4,3 +4,4 @@ chroma/*
 *.json
 .DS_Store
 *hide.jsonl
+*graph_en*

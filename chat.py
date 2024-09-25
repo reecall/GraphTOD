@@ -1,4 +1,10 @@
-from objects import RecipeMachine, RentCarMachine, DoctorMachine
+from objects import (
+    RecipeMachine,
+    RentCarMachine,
+    DoctorMachine,
+    HotelMachine,
+    WorkerAgendaMachine,
+)
 from dotenv import load_dotenv
 import argparse
 
@@ -18,6 +24,12 @@ elif args.machine == "car":
     sm = RentCarMachine(DEBUG=True)
 elif args.machine == "doctor":
     sm = DoctorMachine(DEBUG=True)
+elif args.machine == "hotel":
+    sm = HotelMachine(DEBUG=True)
+elif args.machine == "worker":
+    sm = WorkerAgendaMachine(DEBUG=True)
+else:
+    raise ValueError("Invalid machine")
 
 while True:
     print(f"Agent: {sm.history[-1][1]}")

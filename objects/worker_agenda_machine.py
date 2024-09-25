@@ -4,31 +4,24 @@ from .state_machine import StateMachine
 class WorkerAgendaMachine(StateMachine):
     def __init__(self, DEBUG=False):
         initial_sentence = "Hello, welcome to the construction worker agenda ! How can I help you ? I'm here for you to find a tradesman for your project."
-        #For example build a house, repair your toilet leak, install new windows, etc. Do you want to start a new quote, or do you have an existing quote or invoice ?"
-        #me rajoute des fausses transitions pour avec "start_a_new_quote" par ex,
 
         transitions_graph = {
             "InitialState": {
-                "request": "RequestTypeWork",
-            },
-            "RequestTypeWork": {
-                "new_quote_building_trade": "RequestDetailsForTradesman",
-                "existing_quote_building_trade": "RequestQuoteNumber",
-                "existing_invoice_building_trade": "RequestInvoiceNumber",
+                "new_project_quote": "RequestDetailsForTradesman",  # building trade à p-e garder
+                "existing_project_quote": "RequestQuoteNumber",
+                "existing_project_invoice": "RequestInvoiceNumber",
             },
             "RequestDetailsForTradesman": {
                 "provide_info_for_quote_tradesman": "EvaluateQuotePossibilityWithTradesman",
             },
             "EvaluateQuotePossibilityWithTradesman": {
-                "wait_for_quote_un": "ValidateQuoteTradesman",
-                "wait_for_quote_deux": "OtherRequest",
+                "wait_for_quote": "ValidateQuoteTradesman",
+                "ask_for_detailed_reason": "ExplainReason",
             },
-            "OtherRequest": {
-                "other_request": "RequestTypeWork",
+            "ExplainReason": {
                 "end": "Stop",
             },
             "ValidateQuoteTradesman": {
-                "other_request": "RequestTypeWork",
                 "end": "Stop",
             },
             "RequestQuoteNumber": {
@@ -38,14 +31,13 @@ class WorkerAgendaMachine(StateMachine):
                 "add_to_quote": "EvaluateQuotePossibilityWithTradesman",
             },
             "RequestInvoiceNumber": {
-                "provide_info": "SearchAPIInvoices",
+                "provide_info": "SearchForInvoice",
             },
-            "SearchAPIInvoices": {
+            "SearchForInvoice": {
                 "give_problem_detail": "Answer_problem",
             },
             "Answer_problem": {
                 "send_message_to_tradesman": "SendingMessageTradesman",
-                "other_request": "RequestTypeWork",
             },
             "SendingMessageTradesman": {
                 "end": "Stop",
@@ -53,11 +45,10 @@ class WorkerAgendaMachine(StateMachine):
             "Stop": {},
         }
 
-        #TODO : adapt function call
         function_call = {
             "add_to_quote": "/worker/add",
-            "EvaluateQuotePossibilityWithTradesman": "/worker/yesno",
-            "SearchAPIInvoices" : "/worker/yesno",
+            "provide_info_for_quote_tradesman": "/worker/yesno",
+            "provide_info": "/worker/yesno",
         }
 
         super().__init__(
