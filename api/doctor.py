@@ -41,7 +41,7 @@ def search_recipe(req: SearchDoctor):
     else:
         doctor_name = req.knowledge.get("doctor_name")
 
-    client = chromadb.PersistentClient(path="../chroma")
+    client = chromadb.PersistentClient(path="./chroma")
     recipe_collection = client.get_collection("doctor")
     embedder = SentenceTransformer("all-mpnet-base-v2")
     result = recipe_collection.query(

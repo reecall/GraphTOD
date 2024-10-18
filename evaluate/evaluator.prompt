@@ -8,9 +8,8 @@ You are an expert judge evaluating the quality of a conversation between two AI 
 
 Please provide a score from 1 (poor) to 5 (excellent) for each criterion, along with a detailed analysis of the conversation for each score.
 
----
 
-**Conversation:**
+Conversation:
 {conversation}
 
 You should return your evaluation as a json object respecting the following format:
