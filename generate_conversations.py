@@ -1,7 +1,6 @@
 import argparse
 import json
 import random as rd
-from collections import UserDict
 
 from datetime import datetime
 from tqdm import tqdm
@@ -15,13 +14,14 @@ from objects import (
 )
 from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
+from objects.state_machine import StateMachine
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 
 def generate_convs(
-    initial_machine,
+    initial_machine: StateMachine,
     loop: int,
     do_save: bool = False,
     use_debug: bool = False,
@@ -44,7 +44,11 @@ def generate_convs(
     all_generated_conversations = []
     for _ in tqdm(range(loop), desc="Generating conversations ...", total=loop):
         # Copy the reference state machine
-        sm = initial_machine.__class__(DEBUG=use_debug)
+        sm = initial_machine.__class__(
+            initial_machine.transitions_graph,
+            initial_machine.function_call,
+            DEBUG=use_debug,
+        )
         if persona:
             # Generate with an LLM between 2 and 6 person caracteristics
             preferences = (
