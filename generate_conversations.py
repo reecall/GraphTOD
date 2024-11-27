@@ -25,7 +25,7 @@ def generate_convs(
     loop: int,
     do_save: bool = False,
     use_debug: bool = False,
-    persona: bool = False,
+    persona: bool = True,
 ):
     fake = Faker(locale="en_US")
     # check if machine is a class
@@ -101,7 +101,7 @@ def generate_convs(
             if do_save:
                 # save conversation in a file
                 with open(
-                    f"generated_conv/{initial_machine.__class__.__name__}_simulated_conversation_persona_removed.jsonl",
+                    f"generated_conv/{initial_machine.__class__.__name__}_simulated_conversation_last_version.jsonl",
                     "a",
                 ) as f:
                     f.write(

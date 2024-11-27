@@ -15,7 +15,7 @@ class StateMachine:
         datafile: str = None,
         initial_state: str = "InitialState",
         initial_sentence: str = "Hello ! What can I do for you ?",
-        api_adress = "http://127.0.0.1:8000",
+        api_adress="http://127.0.0.1:8000",
         DEBUG: bool = False,
     ):
         # Define string name of prefab functions
@@ -50,7 +50,7 @@ class StateMachine:
             "state": self.state,
             "transitions_graph": self.transitions_graph,
         }
-    
+
     def get_config(self) -> dict:
         return {
             "transitions_graph": self.transitions_graph,
@@ -65,7 +65,7 @@ class StateMachine:
 
     def get_next_transitions(self):
         return list(self.transitions_graph[self.state].keys())
-    
+
     def detect_intent(self, input_text: str):
         transition_prompt = (
             "You're a agent specialized in state transition graph. "
@@ -82,11 +82,18 @@ class StateMachine:
             f"{self.knowledge}\n"
             "Predict just the transition, and nothing else, as : {'transition': 'transition_name'}"
         )
-        transition = self.llm().invoke(
-            [("system", transition_prompt), ("user", f"Here is the user input : '{input_text}'")],
-            temperature=0,
-            response_format={"type": "json_object"},
-        ).content.lower()
+        transition = (
+            self.llm()
+            .invoke(
+                [
+                    ("system", transition_prompt),
+                    ("user", f"Here is the user input : '{input_text}'"),
+                ],
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            .content.lower()
+        )
         try:
             transition = json.loads(transition)["transition"]
         except (KeyError, ValueError):
@@ -95,7 +102,10 @@ class StateMachine:
                 + "\n"
                 + self.history_to_string()
             )
-        if transition not in self.get_next_transitions() and transition not in ["none", "end"]:    
+        if transition not in self.get_next_transitions() and transition not in [
+            "none",
+            "end",
+        ]:
             raise ValueError(
                 f"Invalid transition. Expected a transition in {self.transitions_graph[self.state]}, got {transition}"
                 + "\n"
@@ -156,17 +166,21 @@ class StateMachine:
                 "Do not forget to be polite and helpful."
             )
 
-        sentence_to_say = self.llm().invoke(
-            [
-                ("system", next_sentence),
-                (
-                    "user",
-                    f"Here is the user input: {input_text}. Generate a response to this.",
-                ),
-            ],
-            temperature=0.3,
-            response_format={"type": "text"},
-        ).content
+        sentence_to_say = (
+            self.llm()
+            .invoke(
+                [
+                    ("system", next_sentence),
+                    (
+                        "user",
+                        f"Here is the user input: {input_text}. Generate a response to this.",
+                    ),
+                ],
+                temperature=0.3,
+                response_format={"type": "text"},
+            )
+            .content
+        )
         self.history.append(("user", input_text))
         self.history.append(("assistant", sentence_to_say))
         return {"transition": transition, "sentence": sentence_to_say}
@@ -174,6 +188,9 @@ class StateMachine:
     def transition(
         self, action: str, input_text: str = None, enable_function_call: bool = True
     ):
+        print("STATE : ", self.transitions_graph[self.state])
+        print("ACTION : ", action)
+
         self.path.append((self.state, action))
         if action == "end":
             self.state = "Stop"
@@ -184,7 +201,9 @@ class StateMachine:
             if action in self.function_call and enable_function_call:
                 f_result = self.function_calling(action, input_text)
                 if f_result:
-                    self.knowledge.update(f_result) # TODO: check if f_result is not empty
+                    self.knowledge.update(
+                        f_result
+                    )  # TODO: check if f_result is not empty
             self.state = self.transitions_graph[self.state][action]
         else:
             raise ValueError(
@@ -196,6 +215,9 @@ class StateMachine:
             return self.function_call[action](input_text)
         else:
             # It is an endpoint
+            print(f"Calling endpoint {self.api_adress + self.function_call[action]}")
+            print(f"Input text: {input_text}")
+            print(f"Knowledge: {self.knowledge}")
             response = requests.post(
                 self.api_adress + self.function_call[action],
                 json={"input_text": input_text, "knowledge": self.knowledge},
@@ -210,20 +232,24 @@ class StateMachine:
             raise ValueError(
                 f"No search result in the context knowledge.\nInput text was : {input_text}\nState was : {self.state}"
             )
-        selection_generation = self.llm().invoke(
-            [
-                (
-                    "user",
+        selection_generation = (
+            self.llm()
+            .invoke(
+                [
                     (
-                        f"Your role is to find the most probable index among the list {list_of_findings} based on the user input and conversation history. "
-                        f"Here is the history of the conversation:\n{self.history_to_string()}\n"
-                        f"Your output must be a single number between 0 and {len(list_of_findings)-1}, and nothing else."
-                        f"\nUser input was : {input_text}"
+                        "user",
+                        (
+                            f"Your role is to find the most probable index among the list {list_of_findings} based on the user input and conversation history. "
+                            f"Here is the history of the conversation:\n{self.history_to_string()}\n"
+                            f"Your output must be a single number between 0 and {len(list_of_findings)-1}, and nothing else."
+                            f"\nUser input was : {input_text}"
+                        ),
                     ),
-                ),
-            ],
-            temperature=0,
-        ).content
+                ],
+                temperature=0,
+            )
+            .content
+        )
         if self.DEBUG:
             print(f"LLM output: {selection_generation}")
         # sub re in the generation
