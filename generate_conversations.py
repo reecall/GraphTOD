@@ -4,6 +4,7 @@ import random as rd
 
 from datetime import datetime
 from tqdm import tqdm
+from copy import copy
 from faker import Faker
 from objects import (
     RecipeMachine,
@@ -44,11 +45,7 @@ def generate_convs(
     all_generated_conversations = []
     for _ in tqdm(range(loop), desc="Generating conversations ...", total=loop):
         # Copy the reference state machine
-        sm = initial_machine.__class__(
-            initial_machine.transitions_graph,
-            initial_machine.function_call,
-            DEBUG=use_debug,
-        )
+        sm = copy(initial_machine)
         if persona:
             # Generate with an LLM between 2 and 6 person caracteristics
             preferences = (
@@ -77,10 +74,10 @@ def generate_convs(
                 gender=gender,
                 informations=preferences,
             )
+            user.set_state_machine(sm)
         else:
-            user = UserMachine()
+            user = None
         seed = rd.randint(0, 999999999999)  # random seed
-        user.set_state_machine(sm)
         try:
             conv, rd_walk = user.generate_conversation(
                 get_ai_model(), graph_description, seed
