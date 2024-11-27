@@ -76,7 +76,7 @@ def generate_convs(
             )
             user.set_state_machine(sm)
         else:
-            user = None
+            user = UserMachine("", 0, "")
         seed = rd.randint(0, 999999999999)  # random seed
         try:
             conv, rd_walk = user.generate_conversation(
