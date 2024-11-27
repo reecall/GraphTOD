@@ -31,9 +31,9 @@ class WorkerAgendaMachine(StateMachine):
                 "add_to_quote": "EvaluateQuotePossibilityWithTradesman",
             },
             "RequestInvoiceNumber": {
-                "provide_info": "SearchForInvoice",
+                "provide_info": "TellIfInvoiceExists",
             },
-            "SearchForInvoice": {
+            "TellIfInvoiceExists": {
                 "give_problem_detail": "Answer_problem",
             },
             "Answer_problem": {

@@ -24,7 +24,7 @@ class DoctorMachine(StateMachine):
                 "end": "Stop",
             },
             "AskPatientInfo": {
-                "save_patient_info": "AskDoctorName",
+                "give_patient_info": "AskDoctorName",
             },
             "AskDoctorName": {
                 "search_doctors_in_list": "ShowDoctorsList",
