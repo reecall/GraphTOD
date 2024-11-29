@@ -1,0 +1,2 @@
+,naturalness,coherence,understandability,overall,invalid_conv,mode,nb_conv,filename,dims
+0,0.9909102141653995,0.928365457592589,0.9930117028226025,0.9707624581935299,8,full,150,train_recipe_original_syntod.jsonl,"['naturalness', 'coherence', 'understandability']"

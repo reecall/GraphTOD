@@ -1,0 +1,8 @@
+,naturalness,coherence,understandability,overall,invalid_conv,mode,nb_conv,filename,dims
+0,0.8348466896555607,0.7998180034979016,0.8265170351825841,0.8203939094453487,0,full,139,DoctorMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.8984702181959315,0.8569949992852698,0.8895582513592153,0.8816744896134721,0,full,142,RecipeMachine_simulated_conversation_last_version3.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.8877488040300116,0.8527057052943253,0.8788115521985778,0.8730886871743049,0,full,150,HotelMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.8868955477114133,0.7681772250141747,0.877881164326515,0.8443179790173678,0,full,150,RentCarMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.8868955477114133,0.7681772250141747,0.877881164326515,0.8443179790173678,0,full,150,RentCarMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.7748192328359399,0.661229668368878,0.759790980061398,0.7319466270887386,0,full,1,../generated_conv/RentCarMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"
+0,0.7748192328359399,0.661229668368878,0.759790980061398,0.7319466270887386,0,full,1,../generated_conv/RentCarMachine_simulated_conversation_last_version.jsonl,"['naturalness', 'coherence', 'understandability']"

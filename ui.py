@@ -7,6 +7,7 @@ from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
 from generate_conversations import generate_convs
 from show_graph import get_graph_dot
+from unieval.eval_conv import unieval_eval
 
 
 st.set_page_config(
@@ -146,6 +147,17 @@ if (api_key and model_name and selected_provider == "openai") or (
                         for conv in generated_conversations
                     ]
                 )
+
+            # Show Unieval evaluation of those conversations
+            st.markdown("---")
+            st.subheader("Evaluate the generated conversations")
+            eval_convs = unieval_eval(
+                generated_conversations_jsonl,
+                ["naturalness", "coherence", "understandability"],
+                mode="full",
+                type="graphtod",
+            )
+            st.write(eval_convs)
 
             # Show on example of conversation
             st.markdown("---")
