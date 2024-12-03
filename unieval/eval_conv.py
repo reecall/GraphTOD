@@ -6,13 +6,16 @@ from pathlib import Path
 
 from unieval.utils import convert_to_json
 from unieval.evaluator import get_evaluator
+
+# from utils import convert_to_json
+# from evaluator import get_evaluator
 import pandas as pd
 from syntodConvertformat import extract_syntod_conv
 
 # needed at the setup of the repo
 ## EVAL WON'T WORK IF YOU DON'T HAVE THAT
-# nltk.download("punkt")
-# nltk.download("punkt_tab")
+nltk.download("punkt")
+nltk.download("punkt_tab")
 
 # data = pd.read_json(
 #     "HotelMachine_simulated_conversation_new_agent.jsonl", lines=True

@@ -1,7 +1,10 @@
 import sys
 import numpy as np
 from nltk import sent_tokenize
+
 from unieval.scorer import UniEvaluator
+
+# from scorer import UniEvaluator
 
 sys.path.append("..")
 from unieval.utils import add_question, print_scores
