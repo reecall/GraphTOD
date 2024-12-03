@@ -12,12 +12,18 @@ class AIModel:
     def __init__(self):
         # Set default model
         load_dotenv(override=True)
-        if environ.get("DEFAULT_OPENAI_TYPE").lower() == "openai":
+        # Get model type
+        model_type = environ.get("DEFAULT_OPENAI_TYPE")
+        if model_type is None:
+            self.is_default = False
+            self.model = None
+            return
+        elif model_type.lower() == "openai":
             self.model = ChatOpenAI(
                 model=environ.get("DEFAULT_OPENAI_MODEL"),
                 api_key=environ.get("DEFAULT_OPENAI_API_KEY"),
             )
-        elif environ.get("DEFAULT_OPENAI_TYPE").lower() == "azure_openai":
+        elif model_type.lower() == "azure_openai":
             self.model = AzureChatOpenAI(
                 model=environ.get("DEFAULT_OPENAI_DEPLOYMENT_NAME"),
                 azure_endpoint=environ.get("DEFAULT_OPENAI_ENDPOINT"),
