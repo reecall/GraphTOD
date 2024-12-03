@@ -7,6 +7,44 @@ from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
 from generate_conversations import generate_convs
 from show_graph import get_graph_dot
+from unieval.eval_conv import unieval_eval
+
+from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
+from streamlit_flow.state import StreamlitFlowState
+from streamlit_flow.layouts import TreeLayout
+from streamlit_flow import streamlit_flow
+
+default_graph = {
+    "InitialState": {
+        "search_hotels": "DisplayHotels",
+        "ask_cancelling_or_modifying_reservation": "BookingFound",
+    },
+    "DisplayHotels": {
+        "ask_for_more_hotels": "DisplayHotels",
+        "select_hotel": "AskPaymentInfo",
+        "ask_for_details": "DisplayHotelDetails",
+    },
+    "DisplayHotelDetails": {
+        "select_hotel": "AskPaymentInfo",
+        "ask_for_more_hotel": "DisplayHotels",
+    },
+    "AskPaymentInfo": {"check_payment_type": "AskPaymentConfirmation"},
+    "AskPaymentConfirmation": {"process_payment": "PaymentAccepted"},
+    "PaymentAccepted": {"request_invoice": "SendInvoice", "end": "Stop"},
+    "SendInvoice": {"end": "Stop"},
+    "BookingFound": {
+        "criteria_to_modify": "ModificationPossible",
+        "refund": "AnswerForRefund",
+    },
+    "ModificationPossible": {"add_criteria": "OtherCriteriaAdded"},
+    "OtherCriteriaAdded": {"end": "Stop"},
+    "AnswerForRefund": {
+        "contest_refund_decision": "DetailsRefundDecision",
+        "accept_decision": "Stop",
+    },
+    "DetailsRefundDecision": {"accept_decision": "Stop"},
+    "Stop": {},
+}
 
 
 st.set_page_config(
@@ -61,6 +99,7 @@ if (api_key and model_name and selected_provider == "openai") or (
         # JSON input for state transition graph
         json_input = st.text_area(
             "Enter your state transition graph in JSON format",
+            json.dumps(default_graph, indent=4, ensure_ascii=False),
             help="Enter here your state-transition graph formatted as explained in the readme.",
             height=500,
         )
@@ -76,8 +115,30 @@ if (api_key and model_name and selected_provider == "openai") or (
                 # visualize json
                 st.json(json_input)
 
+    new_state = streamlit_flow(
+        "fully_interactive_flow",
+        StreamlitFlowState(
+            [], []
+        ),  # Start with an empty state, or with some pre-initialized state
+        fit_view=True,
+        show_controls=True,
+        allow_new_edges=True,
+        animate_new_edges=True,
+        layout=TreeLayout("right"),
+        enable_pane_menu=True,
+        enable_edge_menu=True,
+        enable_node_menu=True,
+    )
+    col1, col2 = st.columns(2)
+    col1.metric("Nodes", len(new_state.nodes))
+    col2.metric("Edges", len(new_state.edges))
+
+    # st.write(new_state.nodes)
+    # st.write(new_state.edges)
+
     initial_sentence = st.text_input(
         "Enter your initial sentence",
+        "Hello, I'm your assistant, how can I help you ?",
         placeholder="Hello my name is John, how can I help you ?",
     )
 
@@ -146,6 +207,17 @@ if (api_key and model_name and selected_provider == "openai") or (
                         for conv in generated_conversations
                     ]
                 )
+
+            # Show Unieval evaluation of those conversations
+            st.markdown("---")
+            st.subheader("Evaluate the generated conversations")
+            eval_convs = unieval_eval(
+                generated_conversations_jsonl,
+                ["naturalness", "coherence", "understandability"],
+                mode="full",
+                type="graphtod",
+            )
+            st.write(eval_convs)
 
             # Show on example of conversation
             st.markdown("---")

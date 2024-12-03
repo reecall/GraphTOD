@@ -1,10 +1,10 @@
 import argparse
 import json
 import random as rd
-from collections import UserDict
 
 from datetime import datetime
 from tqdm import tqdm
+from copy import copy
 from faker import Faker
 from objects import (
     RecipeMachine,
@@ -15,17 +15,18 @@ from objects import (
 )
 from objects.AI_model import get_ai_model
 from objects.user_machine import UserMachine
+from objects.state_machine import StateMachine
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 
 def generate_convs(
-    initial_machine,
+    initial_machine: StateMachine,
     loop: int,
     do_save: bool = False,
     use_debug: bool = False,
-    persona: bool = False,
+    persona: bool = True,
 ):
     fake = Faker(locale="en_US")
     # check if machine is a class
@@ -44,7 +45,7 @@ def generate_convs(
     all_generated_conversations = []
     for _ in tqdm(range(loop), desc="Generating conversations ...", total=loop):
         # Copy the reference state machine
-        sm = initial_machine.__class__(DEBUG=use_debug)
+        sm = copy(initial_machine)
         if persona:
             # Generate with an LLM between 2 and 6 person caracteristics
             preferences = (
@@ -73,10 +74,10 @@ def generate_convs(
                 gender=gender,
                 informations=preferences,
             )
+            user.set_state_machine(sm)
         else:
-            user = UserMachine()
+            user = UserMachine("", 0, "")
         seed = rd.randint(0, 999999999999)  # random seed
-        user.set_state_machine(sm)
         try:
             conv, rd_walk = user.generate_conversation(
                 get_ai_model(), graph_description, seed
@@ -101,7 +102,7 @@ def generate_convs(
             if do_save:
                 # save conversation in a file
                 with open(
-                    f"generated_conv/{initial_machine.__class__.__name__}_simulated_conversation_persona_removed.jsonl",
+                    f"generated_conv/{initial_machine.__class__.__name__}_simulated_conversation_last_version.jsonl",
                     "a",
                 ) as f:
                     f.write(

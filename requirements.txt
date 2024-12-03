@@ -1,3 +1,24 @@
 chromadb
 graphviz
 sentence-transformers
+streamlit
+streamlit-flow-component
+graphviz
+jsonlines
+pandas
+matplotlib
+requests
+langchain_openai
+langchain_community
+langchain_mistralai
+python-dotenv
+tqdm
+Faker
+sympy
+nltk
+prettytable
+torch >= 1.3
+transformers >= 4.17.0.dev0
+numpy
+fastapi
+pydantic

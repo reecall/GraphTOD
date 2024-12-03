@@ -8,11 +8,11 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 machine_types = ["doctor", "recipe"]
 embedder = SentenceTransformer("all-mpnet-base-v2")
-chroma_client = chromadb.PersistentClient(path="../chroma")
+chroma_client = chromadb.PersistentClient(path="./chroma")
 
 for mt in machine_types:
     # read data/corpus_recipe.json as a dataframe
-    df = pd.read_json(f"corpus_{mt}.jsonl", lines=True)
+    df = pd.read_json(f"data/corpus_{mt}.jsonl", lines=True)
     titles = df["title"].to_list()
 
     # create a new collection named 'mt'
