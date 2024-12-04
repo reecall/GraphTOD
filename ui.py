@@ -115,10 +115,95 @@ if (api_key and model_name and selected_provider == "openai") or (
                 # visualize json
                 st.json(json_input)
 
+    nodes = [
+        StreamlitFlowNode(
+            id="init_id",
+            pos=(100, 100),
+            data={"content": "Init"},
+            node_type="input",
+            source_position="right",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "display_id",
+            (350, 50),
+            {"content": "DisplayHotels"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "booking_id",
+            (350, 150),
+            {"content": "BookingFound"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "end_id",
+            (600, 100),
+            {"content": "End"},
+            "output",
+            target_position="left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+    ]
+
+    edges = [
+        StreamlitFlowEdge(
+            "1-2",
+            "init_id",
+            "display_id",
+            animated=True,
+            label="search_hotels",
+            label_show_bg=True,
+            # marker_end={type: "arrow"},
+        ),
+        StreamlitFlowEdge(
+            "1-3",
+            "init_id",
+            "booking_id",
+            animated=True,
+            label="ask_question_on_booking",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "2-4",
+            "display_id",
+            "end_id",
+            animated=True,
+            label="select_hotel",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "3-4",
+            "booking_id",
+            "end_id",
+            animated=True,
+            label="booking_found",
+            label_show_bg=True,
+        ),
+    ]
+
     new_state = streamlit_flow(
         "fully_interactive_flow",
         StreamlitFlowState(
-            [], []
+            nodes, edges
         ),  # Start with an empty state, or with some pre-initialized state
         fit_view=True,
         show_controls=True,
@@ -133,8 +218,28 @@ if (api_key and model_name and selected_provider == "openai") or (
     col1.metric("Nodes", len(new_state.nodes))
     col2.metric("Edges", len(new_state.edges))
 
-    # st.write(new_state.nodes)
-    # st.write(new_state.edges)
+    # st.write([new_state.asdict()])
+    # st.write([dir(o) for o in new_state.edges])
+
+    # st.write([o.id for o in new_state.nodes])
+    # st.write([[o.label, o.source, str(o.target)] for o in new_state.edges])
+
+    def extract_states_edges(edges, nodes):
+        states = {}
+        val = {node.id: node.data["content"] for node in nodes}
+
+        list_edges = [o for o in edges]
+        for edge in list_edges:
+            source = val[edge.source]
+            target = val[edge.target]
+            if source not in states:
+                states[source] = {}
+
+            states[source][edge.label] = target
+        return states
+
+    json_edges = extract_states_edges(new_state.edges, new_state.nodes)
+    st.write(json_edges)
 
     initial_sentence = st.text_input(
         "Enter your initial sentence",
@@ -190,7 +295,8 @@ if (api_key and model_name and selected_provider == "openai") or (
 
     if generate_button:
         try:
-            state_graph = json.loads(json_input)
+            state_graph = json.loads(json_input)  # TODO
+            # state_graph = json.loads(json.dumps(json_edges))
 
             sm = StateMachine(
                 state_graph,
