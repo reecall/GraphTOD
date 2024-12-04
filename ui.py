@@ -7,12 +7,18 @@ from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
 from generate_conversations import generate_convs
 from show_graph import get_graph_dot
-from unieval.eval_conv import unieval_eval
 
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 from streamlit_flow.layouts import TreeLayout
 from streamlit_flow import streamlit_flow
+import torch
+
+use_unieval = False
+if torch.cuda.is_available():
+    use_unieval = True
+    from unieval.eval_conv import unieval_eval
+
 
 default_graph = {
     "InitialState": {
@@ -119,13 +125,14 @@ if (api_key and model_name and selected_provider == "openai") or (
         StreamlitFlowNode(
             id="init_id",
             pos=(100, 100),
-            data={"content": "Init"},
+            data={"content": "InitialState"},
             node_type="input",
             source_position="right",
             selected=True,
             dragging=True,
             draggable=True,
             selectable=True,
+            deletable=True,
         ),
         StreamlitFlowNode(
             "display_id",
@@ -154,7 +161,7 @@ if (api_key and model_name and selected_provider == "openai") or (
         StreamlitFlowNode(
             "end_id",
             (600, 100),
-            {"content": "End"},
+            {"content": "Stop"},
             "output",
             target_position="left",
             selected=True,
@@ -195,7 +202,7 @@ if (api_key and model_name and selected_provider == "openai") or (
             "booking_id",
             "end_id",
             animated=True,
-            label="booking_found",
+            label="show_booking",
             label_show_bg=True,
         ),
     ]
@@ -239,7 +246,7 @@ if (api_key and model_name and selected_provider == "openai") or (
         return states
 
     json_edges = extract_states_edges(new_state.edges, new_state.nodes)
-    st.write(json_edges)
+    # st.write(json_edges)
 
     initial_sentence = st.text_input(
         "Enter your initial sentence",
@@ -270,11 +277,35 @@ if (api_key and model_name and selected_provider == "openai") or (
         item["Transition"]: item["API Endpoint"] for item in function_calling
     }
 
+    if "count" not in st.session_state:
+        st.session_state.count = 0
+
+    if "launcheval_button" not in st.session_state:
+        st.session_state.disabled = True
+
+    if "clicked" not in st.session_state:
+        st.session_state.clicked = False
+
+    def increment_counter():
+        st.session_state.count += 1
+
+    def click_button():
+        st.session_state.clicked = True
+
     generate_button = st.button(
         "Generate conversation dataset",
         use_container_width=True,
         type="primary",
         key="generate_button",
+        on_click=click_button,
+    )
+
+    launcheval_button = st.button(
+        "Evaluate the generated conversations",
+        use_container_width=True,
+        type="primary",
+        key="launcheval_button",
+        disabled=st.session_state.disabled,
     )
 
     config_data = {
@@ -293,10 +324,12 @@ if (api_key and model_name and selected_provider == "openai") or (
             mime="application/json",
         )
 
-    if generate_button:
+    conv_generated = False
+
+    if st.session_state.clicked:
         try:
-            state_graph = json.loads(json_input)  # TODO
-            # state_graph = json.loads(json.dumps(json_edges))
+            # state_graph = json.loads(json_input)  # old format
+            state_graph = json_edges
 
             sm = StateMachine(
                 state_graph,
@@ -313,7 +346,68 @@ if (api_key and model_name and selected_provider == "openai") or (
                         for conv in generated_conversations
                     ]
                 )
+            st.session_state.clicked = False
+            conv_generated = True
+        except json.JSONDecodeError:
+            st.error("Invalid JSON input. Please correct it and try again.")
 
+    if conv_generated:
+        counter_conv = st.button("Next conversation", on_click=increment_counter)
+        st.session_state.disabled = False
+
+        # Show a conversation example
+        st.markdown("---")
+        r_col1, r_col2 = st.columns(2)
+
+        with r_col1:
+            st.subheader("Example of generated conversation")
+            if len(generated_conversations) > 1:
+                if st.session_state.count >= len(generated_conversations):
+                    st.session_state.count = 0
+                example_conv = generated_conversations[st.session_state.count][
+                    "conversation"
+                ]
+            st.write(
+                " <br />".join(
+                    [f"[{line['role']}]: {line['text']}" for line in example_conv]
+                ),
+                unsafe_allow_html=True,
+            )
+
+        with r_col2:
+            # make stats about users
+            st.subheader("Stats about generated conversations persona")
+            users_df = pd.DataFrame([conv["user"] for conv in generated_conversations])
+            # Create a pie chart for gender distribution
+            gender_counts = users_df["gender"].value_counts()
+            plt.figure(figsize=(8, 6))
+            plt.pie(gender_counts, labels=gender_counts.index, autopct="%1.1f%%")
+            plt.title("Gender Distribution")
+            plt.axis("equal")
+            st.pyplot(plt)
+            # Create a pie chart for age distribution
+            # 18/24, 25/34, 35/49, 50/64, et 65 et plus
+            age_bins = [18, 25, 35, 50, 65, 100]
+            age_labels = ["18-24", "25-34", "35-49", "50-64", "65+"]
+            users_df["age"] = pd.cut(users_df["age"], bins=age_bins, labels=age_labels)
+            age_counts = users_df["age"].value_counts()
+            plt.figure(figsize=(8, 6))
+            plt.pie(age_counts, labels=age_counts.index, autopct="%1.1f%%")
+            plt.title("Age Distribution")
+            plt.axis("equal")
+            st.pyplot(plt)
+
+        st.write("<center>", unsafe_allow_html=True)
+        st.download_button(
+            label="Download generated dataset as a jsonlines",
+            data=generated_conversations_jsonl,
+            file_name="generated_conversations.jsonl",
+            mime="application/json",
+        )
+        st.write("</center>", unsafe_allow_html=True)
+
+    if use_unieval:
+        if launcheval_button:
             # Show Unieval evaluation of those conversations
             st.markdown("---")
             st.subheader("Evaluate the generated conversations")
@@ -324,55 +418,3 @@ if (api_key and model_name and selected_provider == "openai") or (
                 type="graphtod",
             )
             st.write(eval_convs)
-
-            # Show on example of conversation
-            st.markdown("---")
-            r_col1, r_col2 = st.columns(2)
-            with r_col1:
-
-                st.subheader("Example of generated conversation")
-                example_conv = generated_conversations[0]["conversation"]
-                st.write(
-                    " <br />".join(
-                        [f"[{line['role']}]: {line['text']}" for line in example_conv]
-                    ),
-                    unsafe_allow_html=True,
-                )
-
-            with r_col2:
-                # make stats about users
-                st.subheader("Stats about generated conversations persona")
-                users_df = pd.DataFrame(
-                    [conv["user"] for conv in generated_conversations]
-                )
-                # Create a pie chart for gender distribution
-                gender_counts = users_df["gender"].value_counts()
-                plt.figure(figsize=(8, 6))
-                plt.pie(gender_counts, labels=gender_counts.index, autopct="%1.1f%%")
-                plt.title("Gender Distribution")
-                plt.axis("equal")
-                st.pyplot(plt)
-                # Create a pie chart for age distribution
-                # 18/24, 25/34, 35/49, 50/64, et 65 et plus
-                age_bins = [18, 25, 35, 50, 65, 100]
-                age_labels = ["18-24", "25-34", "35-49", "50-64", "65+"]
-                users_df["age"] = pd.cut(
-                    users_df["age"], bins=age_bins, labels=age_labels
-                )
-                age_counts = users_df["age"].value_counts()
-                plt.figure(figsize=(8, 6))
-                plt.pie(age_counts, labels=age_counts.index, autopct="%1.1f%%")
-                plt.title("Age Distribution")
-                plt.axis("equal")
-                st.pyplot(plt)
-
-            st.write("<center>", unsafe_allow_html=True)
-            st.download_button(
-                label="Download generated dataset as a jsonlines",
-                data=generated_conversations_jsonl,
-                file_name="generated_conversations.jsonl",
-                mime="application/json",
-            )
-            st.write("</center>", unsafe_allow_html=True)
-        except json.JSONDecodeError:
-            st.error("Invalid JSON input. Please correct it and try again.")
