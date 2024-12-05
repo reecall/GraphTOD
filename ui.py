@@ -12,12 +12,14 @@ from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 from streamlit_flow.layouts import TreeLayout
 from streamlit_flow import streamlit_flow
-import torch
 
 use_unieval = False
-if torch.cuda.is_available():
-    use_unieval = True
+
+if use_unieval:
+    import torch
     from unieval.eval_conv import unieval_eval
+# if torch.cuda.is_available():
+# use_unieval = True
 
 
 default_graph = {
@@ -280,17 +282,28 @@ if (api_key and model_name and selected_provider == "openai") or (
     if "count" not in st.session_state:
         st.session_state.count = 0
 
-    if "launcheval_button" not in st.session_state:
-        st.session_state.disabled = True
+    if "eval_disabled" not in st.session_state:
+        st.session_state.eval_disabled = True
+    if "eval_button" not in st.session_state:
+        st.session_state.eval_button = False
 
-    if "clicked" not in st.session_state:
-        st.session_state.clicked = False
+    if "gen_clicked" not in st.session_state:
+        st.session_state.gen_clicked = False
+
+    if "conv_generated" not in st.session_state:
+        st.session_state.conv_generated = ""
+
+    if "conv_generated_jsonl" not in st.session_state:
+        st.session_state.conv_generated_jsonl = ""
 
     def increment_counter():
         st.session_state.count += 1
 
     def click_button():
-        st.session_state.clicked = True
+        st.session_state.gen_clicked = True
+
+    def click_eval_button():
+        st.session_state.eval_button = True
 
     generate_button = st.button(
         "Generate conversation dataset",
@@ -301,11 +314,12 @@ if (api_key and model_name and selected_provider == "openai") or (
     )
 
     launcheval_button = st.button(
-        "Evaluate the generated conversations",
+        "Evaluate the generated conversations (GPU needed)",
         use_container_width=True,
         type="primary",
         key="launcheval_button",
-        disabled=st.session_state.disabled,
+        disabled=st.session_state.eval_disabled,
+        on_click=click_eval_button,
     )
 
     config_data = {
@@ -324,9 +338,7 @@ if (api_key and model_name and selected_provider == "openai") or (
             mime="application/json",
         )
 
-    conv_generated = False
-
-    if st.session_state.clicked:
+    if st.session_state.gen_clicked:
         try:
             # state_graph = json.loads(json_input)  # old format
             state_graph = json_edges
@@ -346,14 +358,29 @@ if (api_key and model_name and selected_provider == "openai") or (
                         for conv in generated_conversations
                     ]
                 )
-            st.session_state.clicked = False
-            conv_generated = True
+            st.session_state.conv_generated = generated_conversations
+            st.session_state.conv_generated_jsonl = generated_conversations_jsonl
+            st.session_state.gen_clicked = False
+            st.session_state.eval_disabled = False
         except json.JSONDecodeError:
             st.error("Invalid JSON input. Please correct it and try again.")
 
-    if conv_generated:
+    if use_unieval:
+        if st.session_state.eval_button:
+            # Show Unieval evaluation of those conversations
+            st.markdown("---")
+            st.subheader("Evaluate the generated conversations (GPU needed)")
+            eval_convs = unieval_eval(
+                st.session_state.conv_generated_jsonl,
+                ["naturalness", "coherence", "understandability"],
+                mode="full",
+                type="graphtod",
+            )
+            st.write(eval_convs)
+
+    if st.session_state.conv_generated:
         counter_conv = st.button("Next conversation", on_click=increment_counter)
-        st.session_state.disabled = False
+        st.session_state.eval_disabled = False
 
         # Show a conversation example
         st.markdown("---")
@@ -361,12 +388,14 @@ if (api_key and model_name and selected_provider == "openai") or (
 
         with r_col1:
             st.subheader("Example of generated conversation")
-            if len(generated_conversations) > 1:
-                if st.session_state.count >= len(generated_conversations):
+            if len(st.session_state.conv_generated) > 1:
+                if st.session_state.count >= len(st.session_state.conv_generated):
                     st.session_state.count = 0
-                example_conv = generated_conversations[st.session_state.count][
-                    "conversation"
-                ]
+            else:
+                st.session_state.count = 0
+            example_conv = st.session_state.conv_generated[st.session_state.count][
+                "conversation"
+            ]
             st.write(
                 " <br />".join(
                     [f"[{line['role']}]: {line['text']}" for line in example_conv]
@@ -377,7 +406,9 @@ if (api_key and model_name and selected_provider == "openai") or (
         with r_col2:
             # make stats about users
             st.subheader("Stats about generated conversations persona")
-            users_df = pd.DataFrame([conv["user"] for conv in generated_conversations])
+            users_df = pd.DataFrame(
+                [conv["user"] for conv in st.session_state.conv_generated]
+            )
             # Create a pie chart for gender distribution
             gender_counts = users_df["gender"].value_counts()
             plt.figure(figsize=(8, 6))
@@ -400,21 +431,8 @@ if (api_key and model_name and selected_provider == "openai") or (
         st.write("<center>", unsafe_allow_html=True)
         st.download_button(
             label="Download generated dataset as a jsonlines",
-            data=generated_conversations_jsonl,
+            data=st.session_state.conv_generated_jsonl,
             file_name="generated_conversations.jsonl",
             mime="application/json",
         )
         st.write("</center>", unsafe_allow_html=True)
-
-    if use_unieval:
-        if launcheval_button:
-            # Show Unieval evaluation of those conversations
-            st.markdown("---")
-            st.subheader("Evaluate the generated conversations")
-            eval_convs = unieval_eval(
-                generated_conversations_jsonl,
-                ["naturalness", "coherence", "understandability"],
-                mode="full",
-                type="graphtod",
-            )
-            st.write(eval_convs)
