@@ -11,7 +11,7 @@ from os import environ
 class AIModel:
     def __init__(self):
         # Set default model
-        load_dotenv(override=True)
+        # load_dotenv(override=True)
         # Get model type
         model_type = environ.get("DEFAULT_OPENAI_TYPE")
         if model_type is None:
@@ -28,6 +28,7 @@ class AIModel:
                 model=environ.get("DEFAULT_OPENAI_DEPLOYMENT_NAME"),
                 azure_endpoint=environ.get("DEFAULT_OPENAI_ENDPOINT"),
                 api_key=environ.get("DEFAULT_OPENAI_API_KEY"),
+                api_version="2024-03-01-preview",
             )
         else:
             raise ValueError("Invalid model type")
@@ -58,6 +59,7 @@ class AIModel:
                 model=model_name,
                 azure_endpoint=endpoint,
                 api_key=api_key,
+                api_version="2024-03-01-preview",
             )
         elif type.lower() == "llama":
             self.is_default = False
