@@ -21,40 +21,6 @@ if use_unieval:
 # if torch.cuda.is_available():
 # use_unieval = True
 
-
-default_graph = {
-    "InitialState": {
-        "search_hotels": "DisplayHotels",
-        "ask_cancelling_or_modifying_reservation": "BookingFound",
-    },
-    "DisplayHotels": {
-        "ask_for_more_hotels": "DisplayHotels",
-        "select_hotel": "AskPaymentInfo",
-        "ask_for_details": "DisplayHotelDetails",
-    },
-    "DisplayHotelDetails": {
-        "select_hotel": "AskPaymentInfo",
-        "ask_for_more_hotel": "DisplayHotels",
-    },
-    "AskPaymentInfo": {"check_payment_type": "AskPaymentConfirmation"},
-    "AskPaymentConfirmation": {"process_payment": "PaymentAccepted"},
-    "PaymentAccepted": {"request_invoice": "SendInvoice", "end": "Stop"},
-    "SendInvoice": {"end": "Stop"},
-    "BookingFound": {
-        "criteria_to_modify": "ModificationPossible",
-        "refund": "AnswerForRefund",
-    },
-    "ModificationPossible": {"add_criteria": "OtherCriteriaAdded"},
-    "OtherCriteriaAdded": {"end": "Stop"},
-    "AnswerForRefund": {
-        "contest_refund_decision": "DetailsRefundDecision",
-        "accept_decision": "Stop",
-    },
-    "DetailsRefundDecision": {"accept_decision": "Stop"},
-    "Stop": {},
-}
-
-
 st.set_page_config(
     page_title="Conversation generator",
     page_icon="🗣️",
@@ -99,30 +65,6 @@ if (api_key and model_name and selected_provider == "openai") or (
         endpoint=deployment_endpoint,
     )
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        # Create a switch button to choose between json visualisation or graph visualisation
-
-        # JSON input for state transition graph
-        json_input = st.text_area(
-            "Enter your state transition graph in JSON format",
-            json.dumps(default_graph, indent=4, ensure_ascii=False),
-            help="Enter here your state-transition graph formatted as explained in the readme.",
-            height=500,
-        )
-
-    with col2:
-        see_graph_toggle = st.toggle("Visualize the graph", False)
-        if json_input:
-            if see_graph_toggle:
-                # visualize graph
-                graph_dot = get_graph_dot(json.loads(json_input), "Conversation")
-                st.graphviz_chart(graph_dot)
-            else:
-                # visualize json
-                st.json(json_input)
-
     nodes = [
         StreamlitFlowNode(
             id="init_id",
@@ -140,6 +82,150 @@ if (api_key and model_name and selected_provider == "openai") or (
             "display_id",
             (350, 50),
             {"content": "DisplayHotels"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "display_details_id",
+            (350, 50),
+            {"content": "DisplayHotelDetails"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "ask_id",
+            (350, 50),
+            {"content": "AskPaymentInfo"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "ask_confirm_id",
+            (350, 50),
+            {"content": "AskPaymentConfirmation"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "pay_id",
+            (350, 50),
+            {"content": "PaymentAccepted"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "send_id",
+            (350, 50),
+            {"content": "SendInvoice"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "modify_id",
+            (350, 50),
+            {"content": "ModificationPossible"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "criteria_added_id",
+            (350, 50),
+            {"content": "OtherCriteriaAdded"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "answer_refund_id",
+            (350, 50),
+            {"content": "AnswerForRefund"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "details_refund_id",
+            (350, 50),
+            {"content": "DetailsRefundDecision"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "alt_compensation_id",
+            (350, 50),
+            {"content": "AlternativeCompensation"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "compensation_ok_id",
+            (350, 50),
+            {"content": "CompensationAccepted"},
+            "default",
+            "right",
+            "left",
+            selected=True,
+            dragging=True,
+            draggable=True,
+            selectable=True,
+        ),
+        StreamlitFlowNode(
+            "compensation_notok_id",
+            (350, 50),
+            {"content": "CompensationRefused"},
             "default",
             "right",
             "left",
@@ -175,7 +261,7 @@ if (api_key and model_name and selected_provider == "openai") or (
 
     edges = [
         StreamlitFlowEdge(
-            "1-2",
+            "init_id-display_id",
             "init_id",
             "display_id",
             animated=True,
@@ -184,27 +270,195 @@ if (api_key and model_name and selected_provider == "openai") or (
             # marker_end={type: "arrow"},
         ),
         StreamlitFlowEdge(
-            "1-3",
+            "init_id-booking_id",
             "init_id",
             "booking_id",
             animated=True,
-            label="ask_question_on_booking",
+            label="ask_cancelling_or_modifying_reservation",
             label_show_bg=True,
         ),
         StreamlitFlowEdge(
-            "2-4",
+            "display_id-ask_id",
             "display_id",
-            "end_id",
+            "ask_id",
             animated=True,
             label="select_hotel",
             label_show_bg=True,
         ),
         StreamlitFlowEdge(
-            "3-4",
-            "booking_id",
+            "display_id-display_id",
+            "display_id",
+            "display_id",
+            animated=True,
+            label="ask_for_more_hotels",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "display_id-display_details_id",
+            "display_id",
+            "display_details_id",
+            animated=True,
+            label="ask_for_details",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "display_details_id-ask_id",
+            "display_details_id",
+            "ask_id",
+            animated=True,
+            label="select_hotel",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "display_details_id-display_id",
+            "display_details_id",
+            "display_id",
+            animated=True,
+            label="ask_for_more_hotel",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "ask_id-ask_confirm_id",
+            "ask_id",
+            "ask_confirm_id",
+            animated=True,
+            label="check_payment_type",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "ask_confirm_id-pay_id",
+            "ask_confirm_id",
+            "pay_id",
+            animated=True,
+            label="process_payment",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "pay_id-send_id",
+            "pay_id",
+            "send_id",
+            animated=True,
+            label="request_invoice",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "pay_id-end_id",
+            "pay_id",
             "end_id",
             animated=True,
-            label="show_booking",
+            label="end",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "send_id-end_id",
+            "send_id",
+            "end_id",
+            animated=True,
+            label="end",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "booking_id-modify_id",
+            "booking_id",
+            "modify_id",
+            animated=True,
+            label="criteria_to_modify",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "booking_id-answer_refund_id",
+            "booking_id",
+            "answer_refund_id",
+            animated=True,
+            label="refund",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "modify_id-criteria_added_id",
+            "modify_id",
+            "criteria_added_id",
+            animated=True,
+            label="add_criteria",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "criteria_added_id-end_id",
+            "criteria_added_id",
+            "end_id",
+            animated=True,
+            label="end",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "answer_refund_id-details_refund_id",
+            "answer_refund_id",
+            "details_refund_id",
+            animated=True,
+            label="contest_refund_decision",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "answer_refund_id-end_id",
+            "answer_refund_id",
+            "end_id",
+            animated=True,
+            label="accept_decision",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "details_refund_id-end_id",
+            "details_refund_id",
+            "end_id",
+            animated=True,
+            label="accept_decision",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "details_refund_id-alt_compensation_id",
+            "details_refund_id",
+            "alt_compensation_id",
+            animated=True,
+            label="ask_for_another_compensation",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "alt_compensation_id-compensation_ok_id",
+            "alt_compensation_id",
+            "compensation_ok_id",
+            animated=True,
+            label="user_accepts",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "alt_compensation_id-compensation_notok_id",
+            "alt_compensation_id",
+            "compensation_notok_id",
+            animated=True,
+            label="user_refuses",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "compensation_ok_id-end_id",
+            "compensation_ok_id",
+            "end_id",
+            animated=True,
+            label="end",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "compensation_notok_id-alt_compensation_id",
+            "compensation_notok_id",
+            "alt_compensation_id",
+            animated=True,
+            label="negociate_compensation",
+            label_show_bg=True,
+        ),
+        StreamlitFlowEdge(
+            "compensation_notok_id-end_id",
+            "compensation_notok_id",
+            "end_id",
+            animated=True,
+            label="end",
             label_show_bg=True,
         ),
     ]
@@ -323,7 +577,7 @@ if (api_key and model_name and selected_provider == "openai") or (
     )
 
     config_data = {
-        "transitions_graph": json.loads(json_input) if json_input else "",
+        "transitions_graph": json_edges if json_edges else "",
         "function_call": function_calling,
         "datafile": "",
         "initial_sentence": initial_sentence,
@@ -340,7 +594,6 @@ if (api_key and model_name and selected_provider == "openai") or (
 
     if st.session_state.gen_clicked:
         try:
-            # state_graph = json.loads(json_input)  # old format
             state_graph = json_edges
 
             sm = StateMachine(

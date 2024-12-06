@@ -28,6 +28,7 @@ class AIModel:
                 model=environ.get("DEFAULT_OPENAI_DEPLOYMENT_NAME"),
                 azure_endpoint=environ.get("DEFAULT_OPENAI_ENDPOINT"),
                 api_key=environ.get("DEFAULT_OPENAI_API_KEY"),
+                api_version="2024-03-01-preview",  # without it we can't deploy the app
             )
         else:
             raise ValueError("Invalid model type")
@@ -58,6 +59,7 @@ class AIModel:
                 model=model_name,
                 azure_endpoint=endpoint,
                 api_key=api_key,
+                api_version="2024-03-01-preview",  # without it we can't deploy the app
             )
         elif type.lower() == "llama":
             self.is_default = False
