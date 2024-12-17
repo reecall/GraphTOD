@@ -12,7 +12,7 @@ class RentCarMachine(StateMachine):
                 "make_a_reservation": "AskDateAndTime",
             },
             "ResponseFAQ": {
-                "end": "stop",
+                "end": "Stop",
                 "other_request": "InitialState",
             },
             "AskLicensePlateNumber": {
@@ -27,10 +27,10 @@ class RentCarMachine(StateMachine):
                 "check_extend_possibility": "ValidateReservation",
             },
             "ShowPickUpInfos": {
-                "end": "stop",
+                "end": "Stop",
             },
             "CancellationSuccess": {
-                "end": "stop",
+                "end": "Stop",
                 "make_a_reservation": "AskDateAndTime",
             },
             "AskDateAndTime": {
@@ -46,12 +46,12 @@ class RentCarMachine(StateMachine):
                 "ask_more_info": "MoreInfo",
             },
             "ValidateReservation": {
-                "end": "stop",
+                "end": "Stop",
             },
             "MoreInfo": {
                 "return_vehicle_disponibilities": "ShowAvailableDates",
             },
-            "stop": {},
+            "Stop": {},
         }
 
         function_call = {

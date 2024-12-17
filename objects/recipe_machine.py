@@ -35,6 +35,7 @@ class RecipeMachine(StateMachine):
                 "ask_next_step": "ShowStep",
                 "end": "Stop",
             },
+            "Stop": {},
         }
 
         function_call = {

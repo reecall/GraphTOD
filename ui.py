@@ -7,11 +7,18 @@ from objects.state_machine import StateMachine
 from objects.AI_model import get_ai_model
 from generate_conversations import generate_convs
 from show_graph import get_graph_dot
+from utils_streamlit import json_to_streamlit_flow, highlight_conv_path
 
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 from streamlit_flow.layouts import TreeLayout
 from streamlit_flow import streamlit_flow
+
+import objects.hotel_machine as hotel_machine
+import objects.doctor_machine as doctor_machine
+import objects.recipe_machine as recipe_machine
+import objects.rent_car_machine as rent_car_machine
+import objects.worker_agenda_machine as worker_agenda_machine
 
 use_unieval = False
 
@@ -20,40 +27,6 @@ if use_unieval:
     from unieval.eval_conv import unieval_eval
 # if torch.cuda.is_available():
 # use_unieval = True
-
-
-default_graph = {
-    "InitialState": {
-        "search_hotels": "DisplayHotels",
-        "ask_cancelling_or_modifying_reservation": "BookingFound",
-    },
-    "DisplayHotels": {
-        "ask_for_more_hotels": "DisplayHotels",
-        "select_hotel": "AskPaymentInfo",
-        "ask_for_details": "DisplayHotelDetails",
-    },
-    "DisplayHotelDetails": {
-        "select_hotel": "AskPaymentInfo",
-        "ask_for_more_hotel": "DisplayHotels",
-    },
-    "AskPaymentInfo": {"check_payment_type": "AskPaymentConfirmation"},
-    "AskPaymentConfirmation": {"process_payment": "PaymentAccepted"},
-    "PaymentAccepted": {"request_invoice": "SendInvoice", "end": "Stop"},
-    "SendInvoice": {"end": "Stop"},
-    "BookingFound": {
-        "criteria_to_modify": "ModificationPossible",
-        "refund": "AnswerForRefund",
-    },
-    "ModificationPossible": {"add_criteria": "OtherCriteriaAdded"},
-    "OtherCriteriaAdded": {"end": "Stop"},
-    "AnswerForRefund": {
-        "contest_refund_decision": "DetailsRefundDecision",
-        "accept_decision": "Stop",
-    },
-    "DetailsRefundDecision": {"accept_decision": "Stop"},
-    "Stop": {},
-}
-
 
 st.set_page_config(
     page_title="Conversation generator",
@@ -64,6 +37,14 @@ st.set_page_config(
 
 # Streamlit app
 st.title("🗣️ Conversation dataset generator")
+# st.write("Log yourself with your OpenAI API key or your Azure OpenAI API key.")
+
+
+st.write("Create a task oriented dialogue conversation dataset using a state machine.")
+st.write("Modify the example below or create your own graph.")
+st.write(
+    "Right click to add nodes, and then drag and drop to connect them. Right click on nodes or edges to modify their label or delete them. The conversation flow goes from left to right."
+)
 
 # API Key input
 with st.sidebar:
@@ -99,116 +80,10 @@ if (api_key and model_name and selected_provider == "openai") or (
         endpoint=deployment_endpoint,
     )
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        # Create a switch button to choose between json visualisation or graph visualisation
-
-        # JSON input for state transition graph
-        json_input = st.text_area(
-            "Enter your state transition graph in JSON format",
-            json.dumps(default_graph, indent=4, ensure_ascii=False),
-            help="Enter here your state-transition graph formatted as explained in the readme.",
-            height=500,
-        )
-
-    with col2:
-        see_graph_toggle = st.toggle("Visualize the graph", False)
-        if json_input:
-            if see_graph_toggle:
-                # visualize graph
-                graph_dot = get_graph_dot(json.loads(json_input), "Conversation")
-                st.graphviz_chart(graph_dot)
-            else:
-                # visualize json
-                st.json(json_input)
-
-    nodes = [
-        StreamlitFlowNode(
-            id="init_id",
-            pos=(100, 100),
-            data={"content": "InitialState"},
-            node_type="input",
-            source_position="right",
-            selected=True,
-            dragging=True,
-            draggable=True,
-            selectable=True,
-            deletable=True,
-        ),
-        StreamlitFlowNode(
-            "display_id",
-            (350, 50),
-            {"content": "DisplayHotels"},
-            "default",
-            "right",
-            "left",
-            selected=True,
-            dragging=True,
-            draggable=True,
-            selectable=True,
-        ),
-        StreamlitFlowNode(
-            "booking_id",
-            (350, 150),
-            {"content": "BookingFound"},
-            "default",
-            "right",
-            "left",
-            selected=True,
-            dragging=True,
-            draggable=True,
-            selectable=True,
-        ),
-        StreamlitFlowNode(
-            "end_id",
-            (600, 100),
-            {"content": "Stop"},
-            "output",
-            target_position="left",
-            selected=True,
-            dragging=True,
-            draggable=True,
-            selectable=True,
-        ),
-    ]
-
-    edges = [
-        StreamlitFlowEdge(
-            "1-2",
-            "init_id",
-            "display_id",
-            animated=True,
-            label="search_hotels",
-            label_show_bg=True,
-            # marker_end={type: "arrow"},
-        ),
-        StreamlitFlowEdge(
-            "1-3",
-            "init_id",
-            "booking_id",
-            animated=True,
-            label="ask_question_on_booking",
-            label_show_bg=True,
-        ),
-        StreamlitFlowEdge(
-            "2-4",
-            "display_id",
-            "end_id",
-            animated=True,
-            label="select_hotel",
-            label_show_bg=True,
-        ),
-        StreamlitFlowEdge(
-            "3-4",
-            "booking_id",
-            "end_id",
-            animated=True,
-            label="show_booking",
-            label_show_bg=True,
-        ),
-    ]
-
+    # TODO: add a button to charge the graph and change between the different state machines
+    # TODO: add a button to empty the graph window
+    graph = hotel_machine.HotelMachine()
+    nodes, edges = json_to_streamlit_flow(graph.to_json()["transitions_graph"])
     new_state = streamlit_flow(
         "fully_interactive_flow",
         StreamlitFlowState(
@@ -222,6 +97,8 @@ if (api_key and model_name and selected_provider == "openai") or (
         enable_pane_menu=True,
         enable_edge_menu=True,
         enable_node_menu=True,
+        show_minimap=True,
+        hide_watermark=True,
     )
     col1, col2 = st.columns(2)
     col1.metric("Nodes", len(new_state.nodes))
@@ -264,10 +141,19 @@ if (api_key and model_name and selected_provider == "openai") or (
     # slider to generate from 1 to 1000 samples
     num_samples = st.slider("Number of conversation to generate", 1, 1000, 100)
 
-    # add a panel where you can assigne transition to api endpoint
+    # add a panel where you can assign transition to api endpoint
+
+    df = pd.DataFrame(
+        {
+            "Transition": ["select_hotel", "search_hotels", "ask_for_more_hotels"],
+            "API Endpoint": ["select_i", "/hotel/search", "/hotel/search"],
+        }
+    )
+
     with st.expander("Function calling settings"):
         function_calling_df = st.data_editor(
-            pd.DataFrame(columns=["Transition", "API Endpoint"]),
+            # pd.DataFrame(columns=["Transition", "API Endpoint"]),
+            df,
             hide_index=True,
             use_container_width=True,
             num_rows="dynamic",
@@ -296,8 +182,15 @@ if (api_key and model_name and selected_provider == "openai") or (
     if "conv_generated_jsonl" not in st.session_state:
         st.session_state.conv_generated_jsonl = ""
 
+    if "highlighted_flow" not in st.session_state:
+        st.session_state.highlighted_flow = ""
+
     def increment_counter():
         st.session_state.count += 1
+        st.rerun()
+
+    def reset_counter():
+        st.session_state.count = 0
 
     def click_button():
         st.session_state.gen_clicked = True
@@ -313,17 +206,17 @@ if (api_key and model_name and selected_provider == "openai") or (
         on_click=click_button,
     )
 
-    launcheval_button = st.button(
-        "Evaluate the generated conversations (GPU needed)",
-        use_container_width=True,
-        type="primary",
-        key="launcheval_button",
-        disabled=st.session_state.eval_disabled,
-        on_click=click_eval_button,
-    )
+    # launcheval_button = st.button(
+    #     "Evaluate the generated conversations (GPU needed)",
+    #     use_container_width=True,
+    #     type="primary",
+    #     key="launcheval_button",
+    #     disabled=st.session_state.eval_disabled,
+    #     on_click=click_eval_button,
+    # )
 
     config_data = {
-        "transitions_graph": json.loads(json_input) if json_input else "",
+        "transitions_graph": json_edges if json_edges else "",
         "function_call": function_calling,
         "datafile": "",
         "initial_sentence": initial_sentence,
@@ -340,7 +233,6 @@ if (api_key and model_name and selected_provider == "openai") or (
 
     if st.session_state.gen_clicked:
         try:
-            # state_graph = json.loads(json_input)  # old format
             state_graph = json_edges
 
             sm = StateMachine(
@@ -351,7 +243,7 @@ if (api_key and model_name and selected_provider == "openai") or (
             )
             with st.spinner("Generating conversations..."):
                 generated_conversations = generate_convs(sm, num_samples)
-                # Convert the a list of dict to a jsonlines file
+                # Convert the list of dict to a jsonlines file
                 generated_conversations_jsonl = "\n".join(
                     [
                         json.dumps(conv, ensure_ascii=False)
@@ -379,8 +271,45 @@ if (api_key and model_name and selected_provider == "openai") or (
             st.write(eval_convs)
 
     if st.session_state.conv_generated:
-        counter_conv = st.button("Next conversation", on_click=increment_counter)
-        st.session_state.eval_disabled = False
+        st.write("Conversation number {}".format(st.session_state.count + 1))
+        if len(st.session_state.conv_generated) == st.session_state.count:
+            st.session_state.count = 0
+            counter_conv = st.button("Next conversation", on_click=reset_counter)
+        else:
+            counter_conv = st.button("Next conversation", on_click=increment_counter)
+
+        st.session_state.eval_disabled = True
+
+        if len(st.session_state.conv_generated) > 1:
+            if st.session_state.count >= len(st.session_state.conv_generated):
+                st.session_state.count = 0
+        else:
+            st.session_state.count = 0
+
+        st.markdown("---")
+        r_col1 = st.columns(1)[0]
+        with r_col1:
+            flow = highlight_conv_path(
+                new_state,
+                st.session_state.conv_generated[st.session_state.count],
+            )
+
+            highlight_flow = streamlit_flow(
+                "highlighted_flow",
+                StreamlitFlowState(
+                    flow.nodes, flow.edges
+                ),  # Start with an empty state, or with some pre-initialized state
+                fit_view=True,
+                # show_controls=True,
+                # allow_new_edges=True,
+                # animate_new_edges=True,
+                layout=TreeLayout("right"),
+                # enable_pane_menu=True,
+                # enable_edge_menu=True,
+                # enable_node_menu=True,
+                # show_minimap=True,
+                hide_watermark=True,
+            )
 
         # Show a conversation example
         st.markdown("---")
@@ -388,14 +317,10 @@ if (api_key and model_name and selected_provider == "openai") or (
 
         with r_col1:
             st.subheader("Example of generated conversation")
-            if len(st.session_state.conv_generated) > 1:
-                if st.session_state.count >= len(st.session_state.conv_generated):
-                    st.session_state.count = 0
-            else:
-                st.session_state.count = 0
             example_conv = st.session_state.conv_generated[st.session_state.count][
                 "conversation"
             ]
+
             st.write(
                 " <br />".join(
                     [f"[{line['role']}]: {line['text']}" for line in example_conv]
@@ -403,31 +328,31 @@ if (api_key and model_name and selected_provider == "openai") or (
                 unsafe_allow_html=True,
             )
 
-        with r_col2:
-            # make stats about users
-            st.subheader("Stats about generated conversations persona")
-            users_df = pd.DataFrame(
-                [conv["user"] for conv in st.session_state.conv_generated]
-            )
-            # Create a pie chart for gender distribution
-            gender_counts = users_df["gender"].value_counts()
-            plt.figure(figsize=(8, 6))
-            plt.pie(gender_counts, labels=gender_counts.index, autopct="%1.1f%%")
-            plt.title("Gender Distribution")
-            plt.axis("equal")
-            st.pyplot(plt)
-            # Create a pie chart for age distribution
-            # 18/24, 25/34, 35/49, 50/64, et 65 et plus
-            age_bins = [18, 25, 35, 50, 65, 100]
-            age_labels = ["18-24", "25-34", "35-49", "50-64", "65+"]
-            users_df["age"] = pd.cut(users_df["age"], bins=age_bins, labels=age_labels)
-            age_counts = users_df["age"].value_counts()
-            plt.figure(figsize=(8, 6))
-            plt.pie(age_counts, labels=age_counts.index, autopct="%1.1f%%")
-            plt.title("Age Distribution")
-            plt.axis("equal")
-            st.pyplot(plt)
-
+        # with r_col2:
+        #     # make stats about users
+        #     st.subheader("Stats about generated conversations persona")
+        #     users_df = pd.DataFrame(
+        #         [conv["user"] for conv in st.session_state.conv_generated]
+        #     )
+        #     # Create a pie chart for gender distribution
+        #     gender_counts = users_df["gender"].value_counts()
+        #     plt.figure(figsize=(8, 6))
+        #     plt.pie(gender_counts, labels=gender_counts.index, autopct="%1.1f%%")
+        #     plt.title("Gender Distribution")
+        #     plt.axis("equal")
+        #     st.pyplot(plt)
+        #     # Create a pie chart for age distribution
+        #     # 18/24, 25/34, 35/49, 50/64, et 65 et plus
+        #     age_bins = [18, 25, 35, 50, 65, 100]
+        #     age_labels = ["18-24", "25-34", "35-49", "50-64", "65+"]
+        #     users_df["age"] = pd.cut(users_df["age"], bins=age_bins, labels=age_labels)
+        #     age_counts = users_df["age"].value_counts()
+        #     plt.figure(figsize=(8, 6))
+        #     plt.pie(age_counts, labels=age_counts.index, autopct="%1.1f%%")
+        #     plt.title("Age Distribution")
+        #     plt.axis("equal")
+        #     st.pyplot(plt)
+        #
         st.write("<center>", unsafe_allow_html=True)
         st.download_button(
             label="Download generated dataset as a jsonlines",
