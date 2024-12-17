@@ -353,11 +353,11 @@ if (api_key and model_name and selected_provider == "openai") or (
         #     plt.axis("equal")
         #     st.pyplot(plt)
         #
-        # st.write("<center>", unsafe_allow_html=True)
-        # st.download_button(
-        #     label="Download generated dataset as a jsonlines",
-        #     data=st.session_state.conv_generated_jsonl,
-        #     file_name="generated_conversations.jsonl",
-        #     mime="application/json",
-        # )
-        # st.write("</center>", unsafe_allow_html=True)
+        st.write("<center>", unsafe_allow_html=True)
+        st.download_button(
+            label="Download generated dataset as a jsonlines",
+            data=st.session_state.conv_generated_jsonl,
+            file_name="generated_conversations.jsonl",
+            mime="application/json",
+        )
+        st.write("</center>", unsafe_allow_html=True)
