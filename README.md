@@ -2,6 +2,8 @@
 
 Implementation of the [SynTOD](https://arxiv.org/abs/2404.14772v1) paper, which is a model for task-oriented dialogue dataset generation.
 
+Demo at : https://graphtod.reecall.com/
+
 ## Introduction
 
 This framework allows the construction of state-transition graphs to model user-agent interactions in dialogue systems or other event-based applications. It uses explicit nodes and transitions to define actions and reactions in the system, facilitating integration with APIs and custom functions.\
