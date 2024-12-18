@@ -227,7 +227,7 @@ def unieval_eval(file, dims, mode="utterance", type="graphtod"):
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("-f", "--file", type=str)
-    args.add_argument("-m", "--mode", type=str, default="utterance")
+    args.add_argument("-m", "--mode", type=str, default="full")
     args.add_argument("-t", "--type", type=str, default="graphtod")
     args.add_argument(
         "-d",
