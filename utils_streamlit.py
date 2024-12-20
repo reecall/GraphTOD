@@ -57,23 +57,14 @@ def json_to_streamlit_flow(json_data):
 
 
 def highlight_conv_path(flowdata, conv):
-    # load conversation
-    # with open("generated_conversations.jsonl", "r") as json_file:
-    #     json_list = list(json_file)
-    # print(flowdata)
-    print(conv)
     if "conversation" in conv:
         conversation = conv["conversation"]
         for s in conversation:
             if "state" in s:
                 state = s["state"]
-                # if "transition" in s:
-                #     state = s["transition"]
                 modified = False
                 for i in range(len(flowdata.nodes)):
-                    print(i)
                     if flowdata.nodes[i].data["content"] == state:
-                        print(state)
                         flowdata.nodes[i].style = {
                             "backgroundColor": "orange",
                             "fontWeight": 900,

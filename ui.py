@@ -37,7 +37,6 @@ st.set_page_config(
 
 # Streamlit app
 st.title("🗣️ Conversation dataset generator")
-# st.write("Log yourself with your OpenAI API key or your Azure OpenAI API key.")
 
 
 st.write("Create a task oriented dialogue conversation dataset using a state machine.")
@@ -104,12 +103,6 @@ if (api_key and model_name and selected_provider == "openai") or (
     col1.metric("Nodes", len(new_state.nodes))
     col2.metric("Edges", len(new_state.edges))
 
-    # st.write([new_state.asdict()])
-    # st.write([dir(o) for o in new_state.edges])
-
-    # st.write([o.id for o in new_state.nodes])
-    # st.write([[o.label, o.source, str(o.target)] for o in new_state.edges])
-
     def extract_states_edges(edges, nodes):
         states = {}
         val = {node.id: node.data["content"] for node in nodes}
@@ -125,7 +118,6 @@ if (api_key and model_name and selected_provider == "openai") or (
         return states
 
     json_edges = extract_states_edges(new_state.edges, new_state.nodes)
-    # st.write(json_edges)
 
     initial_sentence = st.text_input(
         "Enter your initial sentence",
