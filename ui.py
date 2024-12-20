@@ -145,11 +145,19 @@ if (api_key and model_name and selected_provider == "openai") or (
     with st.expander("Function calling settings"):
         function_calling_df = st.data_editor(
             # pd.DataFrame(columns=["Transition", "API Endpoint"]),
-            df,
+            # df,
+            # hide_index=True,
+            # use_container_width=True,
+            # num_rows="dynamic",
+            pd.DataFrame(columns=["Transition", "API Endpoint"]),
             hide_index=True,
             use_container_width=True,
             num_rows="dynamic",
         )
+    st.write(
+        "To use the API special transitions, host it in localhost and add those transitions to the table above."
+    )
+    st.write(df)
 
     # Convert function calling to a json "transition": "api_endpoint"
     function_calling = function_calling_df.dropna().to_dict(orient="records")
@@ -233,6 +241,7 @@ if (api_key and model_name and selected_provider == "openai") or (
                 initial_sentence=initial_sentence,
                 api_adress=custom_api_url,
             )
+            print(sm.function_calling)
             with st.spinner("Generating conversations..."):
                 generated_conversations = generate_convs(sm, num_samples)
                 # Convert the list of dict to a jsonlines file
