@@ -1,4 +1,4 @@
-# SynTOD - Reecall
+# GraphTOD - Reecall
 
 Training task-oriented dialogue systems is both costly and time-consuming, due to the need for high-quality datasets encompassing diverse intents. Traditional methods depend on extensive human annotation, while recent advancements leverage large language models (LLMs) to generate synthetic data. However, these approaches often require custom prompts or code, limiting accessibility for non-technical users. We introduce GraphTOD, an end-to-end framework that simplifies the generation of task-oriented dialogues. Users can create dialogues by specifying transition graphs in JSON format. Our evaluation demonstrates that GraphTOD generates high-quality dialogues across various domains, significantly lowering the cost and complexity of dataset creation.
 
@@ -242,60 +242,60 @@ It uses a function to select from a list and two API calls to check available ho
 {
     "InitialState": {
         "search_hotels": "DisplayHotels",
-        "ask_cancelling_or_modifying_reservation": "BookingFound",
+        "ask_cancelling_or_modifying_reservation": "BookingFound"
     },
     "DisplayHotels": {
         "ask_for_more_hotels": "DisplayHotels",
         "select_hotel": "AskPaymentInfo",
-        "ask_for_details": "DisplayHotelDetails",
+        "ask_for_details": "DisplayHotelDetails"
     },
     "DisplayHotelDetails": {
         "select_hotel": "AskPaymentInfo",
-        "ask_for_more_hotel": "DisplayHotels",
+        "ask_for_more_hotel": "DisplayHotels"
     },
     "AskPaymentInfo": {
-        "check_payment_type": "AskPaymentConfirmation",
+        "check_payment_type": "AskPaymentConfirmation"
     },
     "AskPaymentConfirmation": {
-        "process_payment": "PaymentAccepted",
+        "process_payment": "PaymentAccepted"
     },
     "PaymentAccepted": {
         "request_invoice": "SendInvoice",
-        "end": "Stop",
+        "end": "Stop"
     },
     "SendInvoice": {
-        "end": "Stop",
+        "end": "Stop"
     },
     "BookingFound": {
         "criteria_to_modify": "ModificationPossible",
-        "refund": "AnswerForRefund",
+        "refund": "AnswerForRefund"
     },
     "ModificationPossible": {
-        "add_criteria": "OtherCriteriaAdded",
+        "add_criteria": "OtherCriteriaAdded"
     },
     "OtherCriteriaAdded": {
-        "end": "Stop",
+        "end": "Stop"
     },
     "AnswerForRefund": {
         "contest_refund_decision": "DetailsRefundDecision",
-        "accept_decision": "Stop",
+        "accept_decision": "Stop"
     },
     "DetailsRefundDecision": {
         "ask_for_another_compensation": "AlternativeCompensation",
-        "accept_decision": "Stop",
+        "accept_decision": "Stop"
     },
     "AlternativeCompensation": {
         "user_accepts": "CompensationAccepted",
-        "user_refuses": "CompensationRefused",
+        "user_refuses": "CompensationRefused"
     },
     "CompensationAccepted": {
-        "end": "Stop",
+        "end": "Stop"
     },
     "CompensationRefused": {
         "negociate_compensation": "AlternativeCompensation",
-        "end": "Stop",
+        "end": "Stop"
     },
-    "Stop": {},
+    "Stop": {}
 }
 ```
 

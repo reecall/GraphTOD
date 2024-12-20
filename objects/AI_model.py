@@ -11,7 +11,7 @@ from os import environ
 class AIModel:
     def __init__(self):
         # Set default model
-        # load_dotenv(override=True)
+        load_dotenv(override=True)
         # Get model type
         model_type = environ.get("DEFAULT_OPENAI_TYPE")
         if model_type is None:
@@ -49,7 +49,7 @@ class AIModel:
         model_name=None,
         api_key=None,
         endpoint=None,
-    ):  # à préciser : set model a besoin d'avoir param def pour openai, pour mistral c'est pas nécessaire
+    ):
         if type.lower() == "openai":
             self.is_default = False
             self.model = ChatOpenAI(model=model_name, api_key=api_key)

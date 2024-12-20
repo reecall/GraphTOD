@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app: FastAPI = FastAPI(title="SynTOD api implementation", lifespan=lifespan)
+app: FastAPI = FastAPI(title="GraphTOD API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

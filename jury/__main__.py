@@ -5,7 +5,7 @@ import argparse
 from langchain.prompts import PromptTemplate
 from nltk.app.wordnet_app import explanation
 from tqdm import tqdm
-from syntodConvertformat import extract_syntod_conv
+from convertformat import extract_syntod_conv
 from objects.AI_model import AIModel, get_ai_model
 import pandas as pd
 from langchain_community.chat_models.azureml_endpoint import (
