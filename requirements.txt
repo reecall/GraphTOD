@@ -4,7 +4,6 @@ sentence-transformers
 streamlit
 streamlit-flow-component
 matplotlib
-graphviz
 jsonlines
 pandas
 requests
@@ -17,7 +16,6 @@ Faker
 sympy
 nltk
 prettytable
-torch >= 1.3
 transformers >= 4.17.0.dev0
 numpy
 fastapi
