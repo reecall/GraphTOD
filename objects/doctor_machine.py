@@ -38,6 +38,7 @@ class DoctorMachine(StateMachine):
             "AppointmentBooked": {
                 "end": "Stop",
             },
+            "Stop": {},
         }
 
         function_call = {

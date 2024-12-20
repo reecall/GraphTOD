@@ -4,6 +4,7 @@ sentence-transformers
 streamlit
 streamlit-flow-component
 matplotlib
+graphviz
 jsonlines
 pandas
 requests

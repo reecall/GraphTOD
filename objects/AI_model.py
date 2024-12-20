@@ -28,6 +28,7 @@ class AIModel:
                 model=environ.get("DEFAULT_OPENAI_DEPLOYMENT_NAME"),
                 azure_endpoint=environ.get("DEFAULT_OPENAI_ENDPOINT"),
                 api_key=environ.get("DEFAULT_OPENAI_API_KEY"),
+                api_version="2024-03-01-preview",
             )
         else:
             raise ValueError("Invalid model type")
@@ -48,7 +49,7 @@ class AIModel:
         model_name=None,
         api_key=None,
         endpoint=None,
-    ):  # à préciser : set model a besoin d'avoir param def pour openai, pour mistral c'est pas nécessaire
+    ):
         if type.lower() == "openai":
             self.is_default = False
             self.model = ChatOpenAI(model=model_name, api_key=api_key)
@@ -58,6 +59,7 @@ class AIModel:
                 model=model_name,
                 azure_endpoint=endpoint,
                 api_key=api_key,
+                api_version="2024-03-01-preview",
             )
         elif type.lower() == "llama":
             self.is_default = False
